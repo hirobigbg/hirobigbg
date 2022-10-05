@@ -3,6 +3,9 @@
 I'm Jiyoon Kim.
 
 - 🌱 I’m currently learning Java
+<img alt="JAVA" src ="https://img.shields.io/badge/Java-007396.svg?&style=for-the-badge&logo=Java&logoColor=white"/>
+
+
 - 👯 I’m looking to collaborate on ...
 - 🤔 I’m looking for help with ...
 - 💬 Ask me about ...
