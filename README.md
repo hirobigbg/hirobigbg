@@ -6,7 +6,7 @@
 
 ### Github stats  
 
-![Anurag's github stats](https://github-readme-stats.vercel.app/api?username=hirobigbg)
+![Anurag's github stats](https://github-readme-stats.vercel.app/api?username=hirobigbg)</br>
 ![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=hirobigbg&langs_count=10&layout=compact)
 
 
