@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<th:block th:replace="fragments/config :: head"></th:block>
+
+<style>
+header {
+	height: 75px;
+	padding: 1rem;
+	color: white;
+	background: #4e73df;
+	font-weight: bold;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.eachRoom {
+	height: 100px;
+}
+
+#search {
+	padding: 20px;
+}
+</style>
+
+</head>
+
+<body>
+	<header>
+		<div id="title">
+			<span><i class="fas fa-solid fa-comment"></i></span><span><h3>메신저</h3></span>
+
+		</div>
+
+		<button type="button" class="btn btn-light btn-lg"
+			onclick="openNewChat();">+</button>
+
+	</header>
+	<table class="table table-hover">
+		<tr th:each="list : ${list}" th:id="${list.chatroom_seq}"
+			ondblclick="openChat(id)">
+
+			<td class="eachRoom">
+
+				<h5 style="color: black;">[[${list.chatroom_name}]]</h5> <br>
+				<h6 th:each="msg : ${msg}"
+					th:if="${list.chatroom_seq} == ${msg.chatroom_seq}">
+					<span>[[${msg.chatmsg_content}]]</span> <span style="float: right;">[[${msg.chatmsg_sendDate}]]</span>
+				</h6>
+
+			</td>
+		</tr>
+	</table>
+
+
+</body>
+
+
+<script>
+	function openNewChat() {
+		window.open("../multiRoom/newChat?domain=[[${project.prj_domain}]]",
+				"채팅방 오픈", "width=500, height=550, top=30, left=30");
+	}
+
+	function openChat(id) {
+		window.open("../multiRoom/room?roomid="+ id,
+				"채팅방", "width=500, height=700, top=10, left=10");
+	}
+</script>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<head th:fragment="configFragment">
+
+
+<th:block th:fragment="config">
+	<meta charset="UTF-8" />
+	<!-- 공통으로 쓰이는 css파일을 넣는다.-->
+	<link rel="stylesheet" th:href="@{/css/sb-admin-2.min.css}">
+	<link rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css" />
+	<link
+		href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+		rel="stylesheet">
+
+	<style>
+.headerDiv {
+	border: 3px solid blueviolet;
+}
+
+body {
+	font-family: Pretendard-Regular;
+}
+</style>
+	<!-- 컨텐츠페이지의 CSS 영역이 들어감 -->
+	<th:block layout:fragment="css"></th:block>
+
+	<!-- 공통으로 쓰이는 js 파일을 넣는다.-->
+	<script th:src="@{/js/jquery-3.6.0.min.js}"></script>
+	<script th:src="@{/js/sb-admin-2.js}"></script>
+
+	<!-- Bootstrap core JavaScript-->
+	<script th:src="@{/vendor/jquery/jquery.min.js}"></script>
+	<script th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+
+	<!-- Core plugin JavaScript-->
+	<script th:src="@{/vendor/jquery-easing/jquery.easing.min.js}"></script>
+
+
+	<!-- 컨텐츠페이지의 스크립트 영역이 들어감 -->
+
+	<script th:inline="javascript">
+		$(function() {
+			
+			$("#sidebarToggle, #sidebarToggleTop").on('click', function(e) {
+				$("body").toggleClass("sidebar-toggled");
+				$(".sidebar").toggleClass("toggled");
+				if ($(".sidebar").hasClass("toggled")) {
+					$('.sidebar .collapse').collapse('hide');
+				}
+				
+			});
+			
+			if([[${#authentication.principal != "anonymousUser"}]]){
+				console.log('subscribe 함수')
+				
+				let sseLink = [[@{/push/subscribe}]];
+				const eventSource = new EventSource(sseLink);
+				
+				eventSource.addEventListener("sse", function(event){
+					
+					console.log("event.data");
+					console.log(event.data);
+					
+					const data = JSON.parse(event.data);
+					
+					
+					if(data.content != 'subscribe 성공')
+						showNotification(data);
+					
+					/* (async () => {
+						
+						const showNotification = () => {
+							openNotification(data);
+						}
+						
+						let granted = false;
+						
+						if(Notification.permission === 'granted'){
+							granted = true;
+						} else if(Notification.permission !== 'denied'){
+							let permission = await Notification.requestPermission();
+							granted = permission === 'granted';
+						}
+						
+						if(granted){
+							showNotification();
+						}
+					}); */
+				});
+			}
+		});
+		
+
+		function showNotification(obj){
+			console.log('실행됨');
+			console.log(obj.url);
+			let seq = obj.url;
+			
+			$('#notifi').text(obj.content);
+			$('#notifi').click(function(){
+				$.ajax({
+					url: [[@{/}+${session.prj_domain}+'/task/showTaskModal']],
+					type: 'post',
+					data: { taskSeq: seq },
+					dataType: 'JSON',
+					async: false,
+					success: function(result) {
+						console.log("ajax 실행됨");
+						
+						console.log(result);
+						console.log(members.get(result.showTask.task_sender));
+						console.log(result.replyList);
+						
+						$("#taskseq").val(result.showTask.task_seq);
+						
+						// 신승훈 * 태스크 상세보기 정보 세팅
+						$('#view_task_sender').val(members.get(result.showTask.task_sender).memb_name + " " + result.showTask.task_sender);
+						$('#view_task_name').val(result.showTask.task_name);
+						
+						let staffListStr = '';
+						if(result.showStaff != null){
+							for(let staff of result.showStaff){
+								if(staffListStr === '')
+									staffListStr += members.get(staff.memb_mail).memb_name+"("+staff.memb_mail+")";
+								else
+									staffListStr += ", " + members.get(staff.memb_mail).memb_name+"("+staff.memb_mail+")";
+							}
+						}
+						$('#view_staffInput').val(staffListStr);
+						
+						console.log('result.showTask.task_rank');
+						let viewRankId = $(':radio[name=view_task_rank][value="' + result.showTask.task_rank + '"]').attr('id');
+						$(`#${viewRankId}`).attr('checked', true);
+						$('.view_task_rank_label').removeClass("active");
+						$(`label[for='${viewRankId}']`).addClass("active");
+						
+						let viewRadioId2 = $(':radio[name=view_task_state][value="' + result.showTask.task_state + '"]').attr('id');
+						console.log(viewRadioId2);
+						$(`#${viewRadioId2}`).attr('checked', true);
+						$('.view_task_state_label').removeClass("active");
+						$(`label[for='${viewRadioId2}']`).addClass("active");
+						
+						let isEmptyStartDate;
+						if(result.showTask.exp_startdate == null)
+							isEmptyStartDate = 0;
+						else
+							isEmptyStartDate = 1;
+						
+						$(':radio[name=view_chk_startDate][value="' + isEmptyStartDate + '"]').attr('checked', true);
+						if(isEmptyStartDate == 1){
+			/* 				$("#datepicker3").show();
+							$('#datepicker3').datepicker();
+							$(".gj-icon").show();
+							 */
+							let year = result.showTask.exp_startdate.substr(0, 4);
+							let month = result.showTask.exp_startdate.substr(5, 2);
+							let day = result.showTask.exp_startdate.substr(8, 2);
+							
+							$('#datepicker3').val(month+"/"+day+"/"+year);
+						}/* else {
+							$("#datepicker3").hide();
+							$(".gj-icon").hide();
+						} */
+						
+						let isEmptyEndDate;
+						if(result.showTask.exp_enddate == null)
+							isEmptyEndDate = 0;
+						else
+							isEmptyEndDate = 1;
+						
+						$(':radio[name=view_chk_endDate][value="' + isEmptyEndDate + '"]').attr('checked', true);
+						if(isEmptyEndDate == 1){
+			/* 				$("#datepicker4").show();
+							$('#datepicker4').datepicker();
+							$(".gj-icon").show();
+							 */
+							let year = result.showTask.exp_enddate.substr(0, 4);
+							let month = result.showTask.exp_enddate.substr(5, 2);
+							let day = result.showTask.exp_enddate.substr(8, 2);
+							
+							$('#datepicker4').val(month+"/"+day+"/"+year);
+						}else {
+		/* 					$("#datepicker4").hide();
+							$(".gj-icon").hide(); */
+						}
+						
+						$('#view_task_content').val(result.showTask.task_content);
+						
+						let performHTML = '<span class="input-group-text" style="justify-content:center; margin-left:15px; margin-bottom:10px; width:100px;">수행도</span> <ul>';
+						let performIndex = 0;
+						if(result.showStaff != null)
+							for(let staff of result.showStaff){
+								if(staff.memb_mail === [[${#authentication.name}]])
+									performHTML += `<li>${members.get(staff.memb_mail).memb_name} <input type="range" class="view_tsuper_perform" id="perform_${performIndex}" taskSeq="${result.showTask.task_seq}" min="0" max="4" style="width: 250px;"></li>`;
+								else 
+									performHTML += `<li>${members.get(staff.memb_mail).memb_name} <input type="range" class="view_tsuper_perform" id="perform_${performIndex}" taskSeq="${result.showTask.task_seq}" min="0" max="4" style="width: 250px;" disabled></li>`;
+								performIndex++;
+							}
+						performHTML += "</ul>";
+						
+						$('#view_perform_list').html(performHTML);
+						for(let i=0 ; i<performIndex ; i++){
+							$('#perform_'+i).val(result.showStaff[i].tsuper_perform/25);
+						}
+						
+						fileListHTML = '';
+						let link = [[@{/}]];
+						for(let file of result.taskFileList){
+							fileListHTML += `<li><a href="${link}${result.showTask.prj_domain}/task/download?fileSeq=${file.tfile_seq}">${file.tfile_ogfile}</a></li>`;
+						}
+						$('#fileList').html(fileListHTML);
+						
+						$('.view_tsuper_perform').change(tsuper_perform_change);
+						
+						// 첨부파일 $("#basic_addon_8").val(result.showTask.);
+						
+						//댓글
+						
+						
+						let reply_list = $("#reply_list");
+						let replyList = '';
+						let mentionReceiver = '';
+						let commentWriter = '';
+						
+						$.each(result.replyList, function(i, el){
+							
+							/*if(el.ment_sender != '' || el.ment_sender != null){
+			
+							
+							$.ajax({
+								url : "../../member/memSearch",
+								type : "POST",
+								data : {
+									memb_mail : el.ment_sender
+								},
+								success : function(result) {
+									
+									console.log(result);
+									
+									mentionReceiver = result;
+									
+								}
+							});
+							
+							}*/
+							
+							if(el.ment_sender == '' || el.ment_sender == null){
+								replyList+=`<table class='replyTable' border='0'><tr><td class='replyTd'>${el.treply_writer}</td><td class='replyTd2'></td><td>${el.treply_content}</td></tr></table>`;
+							} else {
+								replyList+=`<table class='replyTable' border='0'><tr><td class='replyTd'>${el.treply_writer}</td><td class='replyTd2'><div class='mentionDiv'>${el.ment_sender}</div></td><td>${el.treply_content}</td></tr></table>`;
+							}
+						});
+						reply_list.html(replyList);
+						
+						$("#showTaskModal").modal("show");
+					},
+					error: function() {
+						alert('showTaskModal error');
+					}
+				});
+				
+			});
+			
+			  $('.toast').toast('show');
+			
+			
+		}
+		
+
+		
+		
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="css"></th:block>
+
+
+<th:block layout:fragment="script"></th:block>
+
+</head>
+
+</html>

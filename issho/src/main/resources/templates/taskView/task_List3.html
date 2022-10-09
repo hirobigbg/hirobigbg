@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<th:block th:replace="fragments/config :: head"></th:block>
+<!-- bootstrap 4 -->
+<link rel="stylesheet"
+	href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<link rel="stylesheet"
+	href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script
+	src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- gijgo datepicker library -->
+<script src="https://unpkg.com/gijgo@1.9.13/js/gijgo.min.js"
+	type="text/javascript"></script>
+<link href="https://unpkg.com/gijgo@1.9.13/css/gijgo.min.css"
+	rel="stylesheet" type="text/css" />
+<meta charset="UTF-8">
+<style>
+#basicSelection, #basicSelection2, #basicSelection3, #basicSelection4,
+	#basicSelection5 {
+	margin-right: 10px;
+}
+</style>
+
+<script>
+	// 홍상혁 writeORupdate
+	function writeORupdate() {
+		let mode = $('#submitReply').val();
+		
+		let content = $('#treply_content').val();
+
+//		alert(content.length + 'length|' 	+ content);
+		if(content.length < 5 || content.length > 1000){
+			alert('댓글은 5자 이상 1000자 이하입니다.')
+			return false;
+		}
+//		alert(content);
+		return true;
+//		if(mode =='수정')
+//			return updateReply();
+//		else 
+//			return writeReply();		
+	}
+	
+	// 홍상혁 deleteReply
+	function deleteReply(treply_seq) {
+		
+		if (confirm('삭제하시겠습니까?')==false) {
+			return false;
+		}
+		
+		alert(treply_seq);
+		$.ajax({
+			url: 'deleteReply',
+			type: 'get',
+			async: false,
+			data: {treply_seq: treply_seq},
+			success: function(n) {
+				if(n == 0) {
+					alert('삭제가 실패였습니다.');
+					return false;			
+				}else
+					return true;
+			},
+			error: function(e) {
+				alert(e);
+				return false;
+			}
+		});
+	}
+
+</script>
+
+<title>Insert title here</title>
+</head>
+<body>
+	<div id="wrapper">
+		<!-- content 시작 -->
+		<th:block th:replace="fragments/sidebar :: sidebar"></th:block>
+		<!-- content 끝 -->
+
+		<div id="content-wrapper" class="d-flex flex-column">
+			<!-- header 시작 -->
+			<nav th:fragment="navFragment"
+				class="navbar navbar-expand navbar-light bg-white topbar static-top shadow">
+
+				<!-- Sidebar Toggle (Topbar) -->
+				<button id="sidebarToggleTop"
+					class="btn btn-link d-md-none rounded-circle mr-3">
+					<i class="fa fa-bars"></i>
+				</button>
+
+
+				<!-- Topbar Navbar -->
+				<ul class="navbar-nav ml-auto">
+
+					<!-- Nav Item - Alerts -->
+					<li class="nav-item dropdown no-arrow mx-1"><a
+						class="nav-link dropdown-toggle" href="#" id="alertsDropdown"
+						role="button" data-toggle="dropdown" aria-haspopup="true"
+						aria-expanded="false"> <i class="fas fa-bell fa-fw"></i> <!-- Counter - Alerts -->
+							<span class="badge badge-danger badge-counter">3+</span>
+					</a> <!-- Dropdown - Alerts -->
+						<div
+							class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
+							aria-labelledby="alertsDropdown">
+							<h6 class="dropdown-header">Alerts Center</h6>
+							<a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="mr-3">
+									<div class="icon-circle bg-primary">
+										<i class="fas fa-file-alt text-white"></i>
+									</div>
+								</div>
+								<div>
+									<div class="small text-gray-500">December 12, 2019</div>
+									<span class="font-weight-bold">A new monthly report is
+										ready to download!</span>
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="mr-3">
+									<div class="icon-circle bg-success">
+										<i class="fas fa-donate text-white"></i>
+									</div>
+								</div>
+								<div>
+									<div class="small text-gray-500">December 7, 2019</div>
+									$290.29 has been deposited into your account!
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="mr-3">
+									<div class="icon-circle bg-warning">
+										<i class="fas fa-exclamation-triangle text-white"></i>
+									</div>
+								</div>
+								<div>
+									<div class="small text-gray-500">December 2, 2019</div>
+									Spending Alert: We've noticed unusually high spending for your
+									account.
+								</div>
+							</a> <a class="dropdown-item text-center small text-gray-500"
+								href="#">Show All Alerts</a>
+						</div></li>
+
+					<!-- Nav Item - Messages -->
+					<li class="nav-item dropdown no-arrow mx-1"><a
+						class="nav-link dropdown-toggle" href="#" id="messagesDropdown"
+						role="button" data-toggle="dropdown" aria-haspopup="true"
+						aria-expanded="false"> <i class="fas fa-envelope fa-fw"></i> <!-- Counter - Messages -->
+							<span class="badge badge-danger badge-counter">7</span>
+					</a> <!-- Dropdown - Messages -->
+						<div
+							class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
+							aria-labelledby="messagesDropdown">
+							<h6 class="dropdown-header">Message Center</h6>
+							<a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="dropdown-list-image mr-3">
+									<img class="rounded-circle"
+										th:src="@{/img/undraw_profile_1.svg}" alt="...">
+									<div class="status-indicator bg-success"></div>
+								</div>
+								<div class="font-weight-bold">
+									<div class="text-truncate">Hi there! I am wondering if
+										you can help me with a problem I've been having.</div>
+									<div class="small text-gray-500">Emily Fowler · 58m</div>
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="dropdown-list-image mr-3">
+									<img class="rounded-circle"
+										th:src="@{/img/undraw_profile_2.svg}" alt="...">
+									<div class="status-indicator"></div>
+								</div>
+								<div>
+									<div class="text-truncate">I have the photos that you
+										ordered last month, how would you like them sent to you?</div>
+									<div class="small text-gray-500">Jae Chun · 1d</div>
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="dropdown-list-image mr-3">
+									<img class="rounded-circle"
+										th:src="@{/img/undraw_profile_3.svg}" alt="...">
+									<div class="status-indicator bg-warning"></div>
+								</div>
+								<div>
+									<div class="text-truncate">Last month's report looks
+										great, I am very happy with the progress so far, keep up the
+										good work!</div>
+									<div class="small text-gray-500">Morgan Alvarez · 2d</div>
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="dropdown-list-image mr-3">
+									<img class="rounded-circle"
+										src="https://source.unsplash.com/Mv9hjnEUHR4/60x60" alt="...">
+									<div class="status-indicator bg-success"></div>
+								</div>
+								<div>
+									<div class="text-truncate">Am I a good boy? The reason I
+										ask is because someone told me that people say this to all
+										dogs, even if they aren't good...</div>
+									<div class="small text-gray-500">Chicken the Dog · 2w</div>
+								</div>
+							</a> <a class="dropdown-item text-center small text-gray-500"
+								href="#">Read More Messages</a>
+						</div></li>
+
+					<div class="topbar-divider d-none d-sm-block"></div>
+
+					<!-- Nav Item - User Information -->
+					<li class="nav-item dropdown no-arrow"><a
+						class="nav-link dropdown-toggle" href="#" id="userDropdown"
+						role="button" data-toggle="dropdown" aria-haspopup="true"
+						aria-expanded="false"> <span
+							class="mr-2 d-none d-lg-inline text-gray-600 small">Username</span>
+							<img class="img-profile rounded-circle"
+							th:src="@{/img/undraw_profile.svg}">
+					</a> <!-- Dropdown - User Information -->
+						<div
+							class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+							aria-labelledby="userDropdown">
+							<a class="dropdown-item" href="#"> <i
+								class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> 마이페이지
+							</a> <a class="dropdown-item" href="#"> <i
+								class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i> 화상채팅
+							</a>
+							<div class="dropdown-divider"></div>
+							<a class="dropdown-item" href="#" data-toggle="modal"
+								data-target="#logoutModal"> <i
+								class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+								로그아웃
+							</a>
+						</div></li>
+				</ul>
+			</nav>
+			<nav class="navbar navbar-expand-lg"
+				style="background-color: #f1f3f5; border-bottom: solid 2px black;">
+				<div>
+					<!-- 태스크 추가 modal trigger -->
+					<button class="btn btn-primary" id="newTask" data-bs-toggle="modal"
+						data-bs-target="exampleModal">
+						<i class="fa-solid fa-plus"></i>태스크 추가
+					</button>
+				</div>
+			</nav>
+			<!-- 테스크 목록 출력 -->
+			<div class="col-xl-7 col-md-6 m-3" >
+				<div class="card shadow h-20 py-2 mt-3" th:each="task : ${tasklist}" >
+					<div class="card-body clickTask" th:taskSeq="${task.task_seq}">
+						<a href="#" id="favorite" title="즐겨찾기 등록">즐겨찾기</a>
+						<div class="row no-gutters align-items-center">
+							<div class="col mr-2">
+								<div th:text="${task.task_name}" class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+									태스크 111
+								</div>
+								<div th:text="${task.memb_name}" class="h5 mb-0 font-weight-bold text-gray-800">
+									할당자111
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+	<!-- * 신승훈 태스크 상세보기 창 모달 -->
+
+	<div class="modal fade" id="showTaskModal" tabindex="-1"
+				aria-labelledby="exampleModalLabel" aria-hidden="true">
+
+				<form>
+					<div class="modal-dialog modal-lg">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title" id="exampleModalLabel">새로운 태스크 추가</h5>
+								<button type="button" class="btn-close" data-bs-dismiss="modal"
+									aria-label="Close"></button>
+							</div>
+							<div class="modal-body">
+							
+								<!-- 할당자 -->
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="basic_addon_1">할당자</span>
+									</div>
+									<input type="text" class="form-control" readonly
+										th:value="${member.memb_name} + ${member.memb_mail}"
+										aria-label="Username" aria-describedby="basic-addon1">
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="basic_addon_2">담당자</span>
+									</div>
+									<input type="text" class="form-control" id="staffInput"
+										name="staffs" placeholder="담당자를 추가해주세요" aria-label="Username"
+										value="" aria-describedby="basic-addon1">
+									<p>담당자를 추가하지 않을 시, 업무 할당자 본인이 담당자로 배정됩니다.</p>
+								</div>
+
+								<div id="chatMem"
+									style="overflow: auto; width: 100%; height: 200px; margin: 10px;">
+
+									<table class="table table-hover">
+										<tr th:each="list : ${list}" th:id="${list.memb_mail}"
+											th:name="${list.memb_name}" onclick="appendMem(id);">
+											<td th:text="${list.memb_ogfile}"></td>
+											<td th:text="${list.memb_name}"></td>
+											<td th:text="${list.memb_mail}"></td>
+										</tr>
+									</table>
+
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="basic_addon_3">제목</span>
+									</div>
+									<input type="text" class="form-control" name="task_name"
+										placeholder="태스크 제목을 입력하세요" aria-label="Username" required
+										aria-describedby="basic-addon1">
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="basic_addon_4">우선순위</span>
+									</div>
+									<div class="btn-group btn-group-toggle" data-toggle="buttons">
+										<label class="btn btn-outline-info"> <input
+											type="radio" name="task_rank" class="radioSelection"
+											checked="checked" id="priority1" value="0"> 낮음
+										</label> <label class="btn btn-outline-info"> <input
+											type="radio" name="task_rank" class="radioSelection"
+											id="priority2" value="1">보통
+										</label> <label class="btn btn-outline-info"> <input
+											type="radio" name="task_rank" class="radioSelection"
+											id="priority3" value="2"> 높음
+										</label>
+									</div>
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="basic_addon_5">진행도</span>
+									</div>
+									<div class="btn-group btn-group-toggle" data-toggle="buttons">
+										<label class="btn btn-outline-secondary"> <input
+											type="radio" name="task_state" class="radioSelection"
+											checked="checked" id="priority1" value="0"> 진행전
+										</label> <label class="btn btn-outline-secondary"> <input
+											type="radio" name="task_state" class="radioSelection"
+											id="priority2" value="1"> 진행중
+										</label> <label class="btn btn-outline-secondary"> <input
+											type="radio" name="task_state" class="radioSelection"
+											id="priority3" value="2"> 완료
+										</label> <label class="btn btn-outline-secondary"> <input
+											type="radio" name="task_state" class="radioSelection"
+											id="priority3" value="3"> 보류
+										</label>
+									</div>
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="basic_addon_6">예상시작일</span>
+										<input type="radio" id="startNone" name="chk_startDate"
+											value="0" checked="checked">없음 <input type="radio"
+											id="startExist" name="chk_startDate" value="1">있음 <input
+											id="datepicker" width="150" name="exp_startdate"
+											style="margin-left: 20px;" />
+									</div>
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="basic_addon_7">예상종료일</span>
+										<input type="radio" name="chk_endDate" id="endNone" value="0"
+											checked="checked">없음 <input type="radio"
+											id="endExist" name="chk_endDate" value="1">있음 <input
+											id="datepicker2" width="150" name="exp_enddate"
+											style="margin-left: 20px;" />
+									</div>
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="basic_addon_8">첨부파일</span>
+									</div>
+									<input type="file" onchange="addFile(this);">
+								</div>
+
+								<div class="file-list"></div>
+
+								<div class="input-group m-3">
+									<textarea class="form-control" id="basic_addon_9"
+										name="task_content" rows="5">내용을 입력하세요</textarea>
+								</div>
+								
+				  <!-- 댓글 html -->
+				   <!-- 홍상혁 댓글 입력 폼 -->
+ 					<div class="mb-3">
+						<form id="ReplyForm" th:action="@{/taskRpl/writeReply}" method="post" onsubmit="return writeORupdate();">
+
+							<div style="display:inline" height="50px">
+						
+								<input type="hidden" name="task_seq" id="task_seq" th:value="${task_seq}"/>
+								<input type="text" class="col-lg-10" id="treply_content" name="treply_content" placeholder="댓글을 입력하세요">
+								<input type="file" id="uploadFile" name="uploadFile" class="col-lg-9 mt-2" value="첨부파일"/> 	
+								<input type="submit" id="submitReply" class="btn btn-primary bg-gradient-primary" value="댓글저장" />
+							</div>
+						</form>
+					</div>
+					<br>
+	 
+
+				<!-- 홍상혁 1번째 댓글 -->
+				<th:block th:if="${replyList}">
+							<div th:each="taskReplyDetail:${replyList}" class="m-0 p-0 bg-white" style="border-bottom: 1px solid rgb(192, 192, 192); border-top: 1px solid rgb(192, 192, 192); ">
+								<th:block th:if="${#authentication.name} == ${taskReplyDetail.treply_writer}">
+									<b><p th:text="${taskReplyDetail.treply_content}" class="text-primary m-0 mx-2 my-2 p-0">댓글 제목입니다.</p></b>
+								</th:block>
+								<th:block th:unless="${#authentication.name} == ${taskReplyDetail.treply_writer}">
+									<p th:text="${taskReplyDetail.treply_content}" class="m-0 mx-2 my-2 p-0">댓글 제목입니다.</p>
+								</th:block>
+
+						        <div class="d-flex m-0 mb-2 mx-3 p-0 justify-content-between">
+ 									<div class="d-flex m-0 p-0 justify-content-between align-items-center"><i class="fas fa-user mr-2"></i><span th:text="${taskReplyDetail.memb_name}">홍길동 </span> </div> 
+									<div class="d-flex m-0 p-0 align-items-center"><i class="fas fa-clock mr-2"></i><span th:text="${taskReplyDetail.treply_inputdate}">2022.09.15 15:03:00</span> </div>
+									<div class="m-0 p-0 text-white">
+										<div th:if="${#authentication.name} == ${taskReplyDetail.treply_writer}">
+											<a class="btn-sm bg-gradient-primary text-white" href="#" th:onclick="'changeMode(' + ${taskReplyDetail.treply_seq} + ');'"><i class="fas fa-pen"></i></a>							
+											<a class="btn-sm bg-gradient-primary text-white" th:href="@{/taskRpl/replyList(task_seq= ${taskReplyDetail.task_seq})}" th:onclick="'return deleteReply('+${taskReplyDetail.treply_seq} +');'"><i class="fas fa-trash-alt"></i></a>
+											
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+				</th:block>
+						<br><br>
+						<!-- 홍상혁 댓글 html 끝 -->
+							
+							
+							
+							</div>
+							
+							<div class="modal-footer">
+								<button type="button" id="closeNewTask"
+									class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+								<button type="button" class="btn btn-primary" onclick="">등록</button>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+
+	
+	
+	
+	
+	<script>
+		//다중 파일 업로드
+		var fileNo = 0;
+		var filesArr = new Array();
+
+		/* 첨부파일 추가 */
+		function addFile(obj){
+   		var maxFileCnt = 5;   // 첨부파일 최대 개수
+    	var attFileCnt = document.querySelectorAll('.filebox').length;    // 기존 추가된 첨부파일 개수
+   		var remainFileCnt = maxFileCnt - attFileCnt;    // 추가로 첨부가능한 개수
+    	var curFileCnt = obj.files.length;  // 현재 선택된 첨부파일 개수
+
+    	// 첨부파일 개수 확인
+    	if (curFileCnt > remainFileCnt) {
+        alert("첨부파일은 최대 " + maxFileCnt + "개 까지 첨부 가능합니다.");
+    	} else {
+        for (const file of obj.files) {
+            // 첨부파일 검증
+            if (validation(file)) {
+                // 파일 배열에 담기
+                var reader = new FileReader();
+                reader.onload = function () {
+                    filesArr.push(file);
+                };
+                reader.readAsDataURL(file);
+
+        		// 목록 추가
+                let htmlData = '';
+                htmlData += '<div id="file' + fileNo + '" class="filebox">';
+                htmlData += '   <p class="name">' + file.name + '</p>';
+                htmlData += '   <a class="delete" onclick="deleteFile(' + fileNo + ');"><i class="far fa-minus-square"></i></a>';
+                htmlData += '</div>';
+                $('.file-list').append(htmlData);
+                fileNo++;
+            } else {
+                continue;
+            }
+        }
+    }
+    // 초기화
+    document.querySelector("input[type=file]").value = "";
+	}
+
+	/* 첨부파일 검증 */
+	function validation(obj){
+    const fileTypes = ['application/pdf', 'image/gif', 'image/jpeg', 'image/png', 'image/bmp', 'image/tif', 'application/haansofthwp', 'application/x-hwp'];
+    if (obj.name.length > 100) {
+        alert("파일명이 100자 이상인 파일은 제외되었습니다.");
+        return false;
+    } else if (obj.size > (100 * 1024 * 1024)) {
+        alert("최대 파일 용량인 100MB를 초과한 파일은 제외되었습니다.");
+        return false;
+    } else if (obj.name.lastIndexOf('.') == -1) {
+        alert("확장자가 없는 파일은 제외되었습니다.");
+        return false;
+    } else if (!fileTypes.includes(obj.type)) {
+        alert("첨부가 불가능한 파일은 제외되었습니다.");
+        return false;
+    } else {
+        return true;
+    }
+	}
+
+	/* 첨부파일 삭제 */
+	function deleteFile(num) {
+    document.querySelector("#file" + num).remove();
+    filesArr[num].is_delete = true;
+	}
+	
+	
+	//datepicker 달력 숨겨두기
+		$("#datepicker").hide();
+		$("#datepicker2").hide();
+
+		//새로운 태스크 모달창 제어
+		$("#newTask").click(function(e) {
+			e.preventDefault();
+			$("#exampleModal").modal("show");
+		});
+
+		$("#closeNewTask").click(function(e) {
+			e.preventDefault();
+			$("#exampleModal").modal("hide");
+		});
+
+		//예상 시작일/종료일 제어
+		$("#startNone").change(function() {
+			$("#datepicker").hide();
+			$(".gj-icon").hide();
+		});
+
+		$("#startExist").change(function() {
+
+			$("#datepicker").show();
+			$('#datepicker').datepicker();
+			$(".gj-icon").show();
+		});
+
+		$("#endNone").change(function() {
+			$("#datepicker2").hide();
+			$(".gj-icon").hide();
+		});
+
+		$("#endExist").change(function() {
+			$("#datepicker2").show();
+			$('#datepicker2').datepicker();
+			$(".gj-icon").show();
+		});
+		
+		//담당자 추가
+		$("#staffInput").keyup(function(){
+			console.log('keyup 실행');
+			
+			let val = $("#staffInput").val();
+			
+			console.log(val);
+			
+			if(val == '@'){
+				
+				alert('@ 입력됨');
+			}
+		});
+	</script>
+</body>
+</html>

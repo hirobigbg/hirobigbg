@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.softsociety.issho.chat.dao.ChatDAO">
+
+	<select id="chatList" parameterType="Map" resultType="Chatrooms">
+		SELECT
+		c.chatroom_seq AS chatroom_seq, c.chatroom_name AS chatroom_name,
+		c.prj_domain AS prj_domain, m.chat_member AS chat_member
+		FROM chatroom
+		c, chatmember m
+		WHERE c.chatroom_seq = m.chatroom_seq
+		AND c.prj_domain =
+		#{prj_domain}
+		AND m.chat_member = #{chat_member}
+	</select>
+
+	<select id="recentMsgs" resultType="ChatMsg">
+		select chatroom_seq,
+		chatmsg_seq, chatmsg_content, chatmsg_sendDate from chatmsg
+		where
+		(chatroom_seq, chatmsg_sendDate)
+		in (select chatroom_seq,
+		max(chatmsg_sendDate) from chatmsg group by
+		chatroom_seq)
+	</select>
+
+	<insert id="openNewChat" parameterType="Chatrooms">
+		INSERT INTO
+		chatroom(chatroom_seq, chatroom_name, prj_domain)
+		VALUES(#{chatroom_seq}, #{chatroom_name}, #{prj_domain})
+	</insert>
+
+	<insert id="addChatMem" parameterType="Chatrooms">
+		INSERT INTO chatmember
+		VALUES(#{chatroom_seq}, #{chat_member})
+	</insert>
+
+	<select id="chatMemList" parameterType="String"
+		resultType="Members">
+		SELECT m.memb_mail AS memb_mail, m.memb_name AS memb_name,
+		m.memb_ogfile AS memb_ogfile
+		FROM members m, chatmember c
+		WHERE m.memb_mail = c.chat_member
+		AND c.chatroom_seq=#{chatroom_seq}
+	</select>
+
+	<select id="chatMsgs" parameterType="String"
+		resultType="ChatMsg">
+		SELECT * FROM chatmsg
+		WHERE chatroom_seq=#{chatroom_seq}
+	</select>
+
+	<insert id="insertMsg" parameterType="ChatMsg">
+		INSERT INTO chatmsg
+		VALUES(#{chatroom_seq}, chatmsg_seq.NEXTVAL, #{chatmsg_recipient},
+		sysdate, #{chatmsg_content})
+	</insert>
+
+	<select id="chatroomInfo" parameterType="String"
+		resultType="Chatrooms">
+		SELECT * FROM chatroom
+		WHERE chatroom_seq = #{chatroom_seq}
+	</select>
+	
+	<delete id="leaveChat" parameterType="ChatMember">
+		DELETE FROM chatmember
+		WHERE chatroom_seq = #{chatroom_seq}
+		AND chat_member = #{chatmember}
+	</delete>
+
+</mapper>

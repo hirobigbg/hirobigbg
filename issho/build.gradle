@@ -1,0 +1,86 @@
+plugins {
+	id 'org.springframework.boot' version '2.7.3'
+	id 'io.spring.dependency-management' version '1.0.13.RELEASE'
+	id 'java'
+}
+
+group = 'net.softsociety'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	// https://mavenlibs.com/maven/dependency/com.sun.xml.bind/jaxb-impl
+	implementation 'com.sun.xml.bind:jaxb-impl:4.0.0'
+
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	
+	//dependencies for security
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5'
+	
+	//dependencies for websocket
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	implementation 'org.webjars:sockjs-client:1.1.2'
+	implementation 'org.webjars:webjars-locator:0.30'
+	
+	//dependencies for using DB
+	runtimeOnly 'com.oracle.database.jdbc:ojdbc8'
+	implementation 'com.oracle.database.security:osdt_core'
+	implementation 'com.oracle.database.security:oraclepki'
+	implementation 'com.oracle.database.security:osdt_cert'
+	annotationProcessor 'org.projectlombok:lombok'
+	compileOnly 'org.projectlombok:lombok'
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.2.2'
+	//
+	implementation 'com.oracle.database.security:osdt_core'
+    implementation 'com.oracle.database.security:oraclepki'
+    implementation 'com.oracle.database.security:osdt_cert'
+	
+	//dependencies for setting layout
+	implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
+	
+	//testImplementation
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+	testImplementation 'org.springframework.security:spring-security-test'
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+	
+	//신승훈
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.4'
+	
+	//파일 업로드 관련
+	implementation 'commons-io:commons-io:2.6'
+
+	//Excel Download apache
+	implementation group: 'org.apache.poi', name: 'poi', version: '4.1.2'
+	implementation group: 'org.apache.poi', name: 'poi-ooxml', version: '4.1.2'
+	
+	// https://mvnrepository.com/artifact/com.lowagie/itext
+	implementation group: 'com.lowagie', name: 'itext', version: '2.1.7'
+	
+	implementation("org.xhtmlrenderer:flying-saucer-pdf:9.1.20")
+	
+	//SSE 알림
+	implementation 'org.infinispan:infinispan-core:12.0.1.Final'
+    implementation 'org.infinispan:infinispan-commons:12.0.1.Final'
+    implementation 'org.infinispan:infinispan-marshaller-protostuff:12.0.1.Final'
+    implementation 'org.jboss.marshalling:jboss-marshalling-osgi:2.0.10.Final'
+
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

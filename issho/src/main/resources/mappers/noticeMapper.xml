@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="net.softsociety.issho.notice.dao.NoticeDAO">
+
+<!-- 조건에 맞는 공지사항 목록 -->
+<select id="listNotice" parameterType="map" resultType="NoticeDetail">
+	SELECT 
+ 		notice_seq, n.prj_domain, notice_name, notice_writer, notice_contents
+		, notice_ogFilr, notice_saveFile
+		, to_char(notice_date, 'YYYY-MM-DD HH24:MI:SS') notice_date
+		, notice_hits, memb_name, prj_name
+	FROM 
+		notice n, members m, projects p
+	WHERE 
+		n.prj_domain =  p.prj_domain
+		AND n.notice_writer = m.memb_mail
+		<if test="prj_domain != null">
+			AND n.prj_domain = #{prj_domain}
+		</if>
+		<if test="type != null and searchWord != null">
+			<if test="type == 'notice_name'">
+				AND notice_name like '%' || #{searchWord} || '%'
+			</if>	
+			<if test="type == 'notice_contents'">
+				AND notice_contents like '%' || #{searchWord} || '%'
+			</if>	
+			<if test="type == 'memb_name'">
+				AND memb_name like '%' || #{searchWord} || '%'
+			</if>	
+			<if test="type == 'notice_date'">
+				AND to_char(notice_date, 'YYYY-MM-DD HH24:MI:SS') like '%' || #{searchWord} || '%'
+			</if>
+		</if>		
+		ORDER BY notice_seq DESC
+</select>
+
+<!-- 조건에 맞는 공지사항 갯수 확인 -->
+<select id="countNotice"  parameterType="map" resultType="int">
+	SELECT 
+		count(*)	
+	FROM 
+		notice n, members m, projects p
+	WHERE 
+		n.prj_domain =  p.prj_domain
+		AND n.notice_writer = m.memb_mail
+		<if test="prj_domain != null">
+			AND n.prj_domain = #{prj_domain}
+		</if>	
+		<if test="type != null and searchWord != null">
+			<if test="type == 'notice_name'">
+				AND notice_name like '%' || #{searchWord} || '%'
+			</if>	
+			<if test="type == 'notice_contents'">
+				AND notice_contents like '%' || #{searchWord} || '%'
+			</if>	
+			<if test="type == 'memb_name'">
+				AND memb_name like '%' || #{searchWord} || '%'
+			</if>	
+			<if test="type == 'notice_date'">
+				AND to_char(notice_date, 'YYYY-MM-DD HH24:MI:SS') like '%' || #{searchWord} || '%'
+			</if>
+		</if>		 
+</select>
+
+<!-- 공지사항 하나 읽기 -->
+<select id="selectNotice" resultType="NoticeDetail">
+	SELECT 
+ 		notice_seq, n.prj_domain, notice_name, notice_writer, notice_contents
+		, notice_ogFilr, notice_saveFile
+		, to_char(notice_date, 'YYYY-MM-DD HH24:MI:SS') notice_date
+		, notice_hits, memb_name, prj_name
+	FROM 
+		notice n, members m, projects p
+	WHERE 
+		n.prj_domain =  p.prj_domain
+		AND n.notice_writer = m.memb_mail
+		AND notice_seq = #{notice_seq}
+</select>
+
+<!-- 공지사항 저장 -->
+<insert id="insertNotice" parameterType="Notice">
+	INSERT INTO 
+		notice
+		(
+		 notice_seq, prj_domain, notice_name, notice_writer, notice_contents
+		<if test="notice_ogFilr != null and notice_saveFile != ''">
+			, notice_ogFilr, notice_saveFile
+		</if>
+		, notice_date, notice_hits
+		)
+	VALUES (
+		notice_seq.nextval, #{prj_domain}, #{notice_name}, #{notice_writer}, #{notice_contents}
+		<if test="notice_ogFilr != null and notice_saveFile != ''">
+			, #{notice_ogFilr}, #{notice_saveFile}
+		</if>
+		, sysdate , 0
+	)
+</insert>
+
+<!-- 공지사항 삭제 -->
+<delete id="deleteNotice" parameterType="Notice">
+	delete
+	from
+		notice
+	where
+		notice_seq = #{notice_seq}
+		and notice_writer = #{notice_writer}
+</delete>
+
+<!-- 공지사항 수정 -->
+<update id="updateNotice" parameterType="Notice">
+	UPDATE
+		notice
+	SET
+	 	 notice_name = #{notice_name}
+	 	, notice_contents = #{notice_contents}
+	 	, notice_date = sysdate
+		<if test="notice_ogFilr != null and notice_saveFile != ''">
+			, notice_ogFilr = #{notice_ogFilr}
+			, notice_saveFile = #{notice_saveFile}
+		</if>
+	WHERE	
+	 	notice_seq = #{notice_seq}
+		AND notice_writer = #{notice_writer}
+</update>
+
+
+<!-- 공지사항 조회수 1 증가 -->
+<update id="updateHits" parameterType="int">
+	update
+		notice
+	set
+		notice_hits = notice_hits + 1
+	where
+		notice_seq = #{notice_seq}
+</update>
+
+<!-- 리플 저장 -->
+<insert id="writeComment" parameterType="Comment">
+	insert 
+	into 
+		noticeComment (
+			noticeCmt_seq
+			, notice_seq
+			, noticeCmt_writer
+			, noticeCmt_contents
+			, noticeCmt_date)
+	values (
+			noticeCmt_seq.nextval
+			, #{notice_seq}
+			, #{noticeCmt_writer}
+			, #{noticeCmt_contents}
+			, sysdate
+	)
+</insert>
+
+<!-- 조건에 맞는 공지사항 갯수 확인 -->
+<select id="countComment" resultType="int">
+	SELECT 
+		count(*)	
+	FROM 
+		noticeComment
+	WHERE 
+		notice_seq =  #{notice_seq}
+</select>
+
+<!-- 리플 목록 -->
+<select id="listComment" parameterType="int" resultType="CommentDetail">
+	SELECT
+		noticeCmt_seq
+		, n.notice_seq
+		, noticeCmt_writer
+		, noticeCmt_contents
+		, to_char(noticeCmt_date, 'YYYY-MM-DD HH24:MI:SS') noticeCmt_date
+		, memb_name
+		, notice_name
+	FROM
+		noticeComment c, notice n, members m
+	WHERE
+			c.notice_seq = n.notice_seq
+		AND c.noticeCmt_writer = m.memb_mail	
+		AND c.notice_seq = #{notice_seq}
+	ORDER by
+		noticeCmt_date DESC
+</select>
+
+<!-- 리플 수정 -->
+<update id="updateComment" parameterType="Comment">
+	UPDATE noticeComment
+	SET 
+		noticeCmt_contents = #{noticeCmt_contents}
+		, noticeCmt_date = sysdate
+	WHERE
+		noticeCmt_seq = #{noticeCmt_seq}
+</update>
+
+<!-- 리플 삭제 -->
+<delete id="deleteComment" parameterType="Comment">
+	DELETE FROM noticeComment
+	WHERE 
+			noticeCmt_seq = #{noticeCmt_seq} 
+		AND noticeCmt_writer = #{noticeCmt_writer}
+</delete>
+
+<!-- * 신승훈 메인창 목록 (최신 공지사항) -->
+<select id="selectMainNotice" parameterType="String" resultType="Notice">
+<![CDATA[
+select 
+	*
+   FROM
+       (SELECT
+		notice_seq 
+		,notice_name
+		,prj_domain	
+	FROM 
+		notice
+	WHERE 
+		prj_domain =  #{prj_domain}
+	ORDER BY
+		notice_seq DESC)
+WHERE
+	ROWNUM <= 4
+]]>	
+</select>
+</mapper>

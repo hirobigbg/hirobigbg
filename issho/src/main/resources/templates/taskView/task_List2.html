@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<th:block th:replace="fragments/config :: head"></th:block>
+<!-- bootstrap 4 -->
+<link rel="stylesheet"
+	href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<link rel="stylesheet"
+	href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script
+	src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- gijgo datepicker library -->
+<script src="https://unpkg.com/gijgo@1.9.13/js/gijgo.min.js"
+	type="text/javascript"></script>
+<link href="https://unpkg.com/gijgo@1.9.13/css/gijgo.min.css"
+	rel="stylesheet" type="text/css" />
+<meta charset="UTF-8">
+<style>
+#basicSelection, #basicSelection2, #basicSelection3, #basicSelection4,
+	#basicSelection5 {
+		margin-right: 10px;
+	}
+	
+	#naviDiv {
+		margin: 0 auto;
+	}
+	
+	.taskCard {
+		width : 170%;
+	}
+	
+	.bookmarked {
+		color : yellow;
+	}
+</style>
+
+<script type="text/javascript" th:inline="javascript">
+	let page = [[${page}]];
+	let task_state = '';
+	let task_rank = '';
+	let bookmark = '';
+	
+	function pagingFormSubmit(currentPage) {
+		var searchWord = $('#searchWord').val();
+		page = currentPage;
+		selectTask();
+	}
+	
+	//신승훈 * 태스크 조건 검색
+	function selectTask(){
+		let obj = new Object();
+		if($('#task_sender_checkbox').is(':checked'))
+			obj.task_sender = 'task_sender';
+		if($('#task_staff_checkbox').is(':checked'))
+			obj.task_staff = 'task_staff';
+		
+		if($(this).attr('do')!=undefined){
+			if($(this).attr('do')==="task_state"){
+				task_state = "task_state";
+				task_rank = "";
+				bookmark = "";
+			}	
+			if($(this).attr('do')==="task_rank"){
+				task_state = "";
+				task_rank = "task_rank";
+				bookmark = "";
+			}
+				
+			if($(this).attr('do')==="bookmark"){
+				task_state = "";
+				task_rank = "";
+				bookmark = "bookmark";
+			}
+		}
+		
+		if(task_state != "")
+			obj.search_type = "task_state";
+		if(task_rank != "")
+			obj.search_type = "task_rank";
+		if(bookmark != "")
+			obj.search_type = "bookmark";
+		
+		obj.searchWord = $('#searchWord').val();
+		obj.page = page;
+		
+		$.ajax({
+			url: 'selectTask',
+			type: 'post',
+			data: obj,
+			dataType: 'JSON',
+			success: function(resultMap) {
+				page = resultMap.page;
+				console.log("resultMap"	);
+				console.log(resultMap);
+				createTaskList(resultMap.taskList);
+				createNavi(resultMap.navi);
+			},
+			error: function(err) {
+				console.log(JSON.stringify(err));
+				console.log(err.status);
+			}
+		});
+	}
+	
+	//신승훈 * 태스크 네비
+	function createNavi(navi) {
+		let naviHTML = '';
+		
+		//if(navi.currentGroup != 0)
+		//	naviHTML += `<li class="page-item"><a class="page-link" th:href="javascript:pagingFormSubmit(${navi.currentPage - navi.pagePerGroup})">◁◁</a></li>`;
+			
+		if(navi.currentPage > 1)
+			naviHTML += `<li class="page-item"><a class="page-link" href="javascript:pagingFormSubmit(${navi.currentPage - 1})">◀</a></li>`;
+		
+		for(let i=navi.startPageGroup ; i<=navi.endPageGroup ; i++){
+			if(page==i)
+				naviHTML += `<b>`;
+			naviHTML += `<li class="page-item"><a class="page-link" href="javascript:pagingFormSubmit(${i})">${i}</a></li>`;
+			if(page==i)
+				naviHTML += `</b>`;
+		}
+		
+		if(navi.currentPage != navi.totalPageCount)
+			naviHTML += `<li class="page-item"><a class="page-link" href="javascript:pagingFormSubmit(${navi.currentPage + 1})">▶</a></li>`;
+		
+		//if(navi.currentGroup != navi.endPageGroup)
+		//	naviHTML += `<li class="page-item"><a class="page-link" href="javascript:pagingFormSubmit(${navi.currentPage + navi.pagePerGroup})">▷▷</a></li>`;
+		
+		$('#naviDiv').html(naviHTML);
+	}
+	
+	//신승훈 * 태스크 리스트
+	function createTaskList(taskList) {
+		let taskHTML = '';
+		for(let task of taskList){
+			taskHTML += `
+				<div class="card shadow h-20 py-2 mt-3 taskCard">
+				<div class="card-body clickTask" taskSeq="${task.task_seq}">	
+					<div class="no-gutters align-items-center">
+						<div class="row mr-2">
+							<!-- 즐겨찾기 -->
+							<div class="col-1">`;
+							console.log(task.bookmark_memb_mail == [[${#authentication.name}]]);
+				if(task.bookmark_memb_mail != [[${#authentication.name}]])
+					taskHTML += `<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="currentColor" class="bi bi-star bookmarkicon" taskseq="${task.task_seq}" viewBox="0 0 16 16">
+									<path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z"/>
+								</svg>`;
+								
+				else 
+					taskHTML += `<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="currentColor" class="bi bi-star bookmarkicon bookmarked" taskseq="${task.task_seq}" viewBox="0 0 16 16">
+						<path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
+					</svg>`;
+								
+				taskHTML += `</div>
+							
+							<div class="col-5 row">
+								<div class="h5 col-12 font-weight-bold text-uppercase mb-1">
+									${task.task_name}
+								</div>
+								<div class="col-12 mb-0 font-weight-bold text-gray-800">
+									할당자 ${task.task_sender}
+								</div>
+							</div>
+							<div class="col-2">`;
+							
+				if(task.task_rank == 0)
+					taskHTML += '<div class="h5 mt-3 mb-0 font-weight-bold text-gray-800 text-warning">우선순위 : 낮음';
+				if(task.task_rank == 1)
+					taskHTML += '<div class="h5 mt-3 mb-0 font-weight-bold text-gray-800 text-primary">우선순위 : 보통';
+				if(task.task_rank == 2)
+					taskHTML += '<div class="h5 mt-3 mb-0 font-weight-bold text-gray-800 text-danger">우선순위 : 높음';
+				
+				//<!-- 신승훈 진행상태 변경 -->	
+				if(task.task_state == 0){
+					if(task.task_sender != [[${#authentication.name}]]){
+						taskHTML += `</div>
+								</div>
+							<div class="h5 mt-1 mb-2 font-weight-bold text-gray-800 btn btn-warning text-white" id="stateSeq_${task.task_seq}" taskseq="${task.task_seq}">`
+					}else{
+						taskHTML += `</div>
+								</div>
+							<div class="h5 mt-1 mb-2 font-weight-bold text-gray-800 btn btn-warning text-white stateChange" id="stateSeq_${task.task_seq}" taskseq="${task.task_seq}">`
+					}
+					taskHTML += '진행전';	
+				}	
+					
+				if(task.task_state == 1){
+					if(task.task_sender != [[${#authentication.name}]]){
+						taskHTML += `</div>
+								</div>
+							<div class="h5 mt-1 mb-2 font-weight-bold text-gray-800 btn btn-primary text-white" id="stateSeq_${task.task_seq}" taskseq="${task.task_seq}">`
+					}else{
+						taskHTML += `</div>
+								</div>
+							<div class="h5 mt-1 mb-2 font-weight-bold text-gray-800 btn btn-primary text-white stateChange" id="stateSeq_${task.task_seq}" taskseq="${task.task_seq}">`
+					}
+					taskHTML += '진행중';	
+				}
+					
+				if(task.task_state == 2){
+					if(task.task_sender != [[${#authentication.name}]]){
+						taskHTML += `</div>
+								</div>
+							<div class="h5 mt-1 mb-2 font-weight-bold text-gray-800 btn btn-success text-white" id="stateSeq_${task.task_seq}" taskseq="${task.task_seq}">`
+					}else{
+						taskHTML += `</div>
+								</div>
+							<div class="h5 mt-1 mb-2 font-weight-bold text-gray-800 btn btn-success text-white stateChange" id="stateSeq_${task.task_seq}" taskseq="${task.task_seq}">`
+					}
+					taskHTML += '완료';	
+				}
+				
+				if(task.task_state == 3){
+					if(task.task_sender != [[${#authentication.name}]]){
+						taskHTML += `</div>
+								</div>
+							<div class="h5 mt-1 mb-2 font-weight-bold text-gray-800 btn btn-secondary text-white" id="stateSeq_${task.task_seq}" taskseq="${task.task_seq}">`
+					}else{
+						taskHTML += `</div>
+								</div>
+							<div class="h5 mt-1 mb-2 font-weight-bold text-gray-800 btn btn-secondary text-white stateChange" id="stateSeq_${task.task_seq}" taskseq="${task.task_seq}">`
+					}
+					taskHTML += '보류';	
+				}
+				taskHTML += `</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			`;
+					
+		}
+		$('#taskListDiv').html(taskHTML);
+		
+		//신승훈 * 즐겨찾기 클릭시
+       	$(".bookmarkicon").click(bookmarkControlFunc); 
+		
+		//신승훈 * 상세보기 클릭시
+    	$(".clickTask").click(showTaskModalControlFunc); 
+		
+		//신승훈 * 진행도 클릭시
+    	$(".stateChange").click(stateControlFunc); 
+	}
+	
+	//신승훈 * 진행상태 변경
+	function stateControlFunc(event){
+		event.stopPropagation();
+	
+		$.ajax({
+   			url : 'stateChange',
+   			type : 'post',
+   			data : { task_seq: $(this).attr('taskseq') },
+   			dataType : "json",
+   			success : function(stateResult){
+   				console.log(stateResult);
+   				if(stateResult.task_state === "0"){
+   					$(`#stateSeq_${stateResult.task_seq}`).text("진행전");
+   					$(`#stateSeq_${stateResult.task_seq}`).removeClass("btn-secondary");
+   					$(`#stateSeq_${stateResult.task_seq}`).addClass("btn-warning");
+   					
+   				} else if(stateResult.task_state === "1"){
+   					$(`#stateSeq_${stateResult.task_seq}`).text("진행중");
+  					$(`#stateSeq_${stateResult.task_seq}`).removeClass("btn-warning");
+   					$(`#stateSeq_${stateResult.task_seq}`).addClass("btn-primary");
+   					
+   				}else if(stateResult.task_state === "2"){
+   					$(`#stateSeq_${stateResult.task_seq}`).text("완료");
+   					$(`#stateSeq_${stateResult.task_seq}`).removeClass("btn-primary");
+   					$(`#stateSeq_${stateResult.task_seq}`).addClass("btn-success");
+   					
+   				}else if(stateResult.task_state === "3"){
+   					$(`#stateSeq_${stateResult.task_seq}`).text("보류");
+   					$(`#stateSeq_${stateResult.task_seq}`).removeClass("btn-success");
+   					$(`#stateSeq_${stateResult.task_seq}`).addClass("btn-secondary");	
+   				}	
+   			},
+   			error : function(err){
+   				console.log('stateChange error');
+   			}
+   		});
+		
+	}
+	
+	//신승훈 * 즐겨찾기
+	function bookmarkControlFunc(event){
+   		event.stopPropagation();
+  		let svg = $(this);
+   		
+   		$.ajax({
+   			url : 'bookmark',
+   			type : 'post',
+   			data : {taskSeq: $(this).attr('taskseq')},
+   			dataType : "json",
+   			success : function(bookmark){
+   				console.log(bookmark);
+   				if(bookmark){
+   					svg.html('<path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>');
+   					svg.addClass('bookmarked');
+   				}else {
+   					svg.html(`<path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z"/>`);
+   					svg.removeClass('bookmarked');
+   				}
+   					
+   			},
+   			error : function(err){
+   				console.log('bookmark error');
+   			}
+   		});
+   	}
+	
+	//신승훈 * 태스크 상세보기창 -> 수행도 변경
+	function tsuper_perform_change() {
+		$.ajax({
+   			url : 'performChange',
+   			type : 'post',
+   			data : {
+   				task_seq: $(this).attr('taskseq'),
+   				tsuper_perform : $(this).val()
+ 			},
+   			dataType : "json",
+   			success : function(result){
+   				console.log(result);	
+   			},
+   			error : function(err){
+   				console.log(err);
+   			}
+   		});
+	}
+	
+	//신승훈 * 태스트 상세보기
+	function showTaskModalControlFunc(event){
+		$("#showTaskModal").modal("show");
+		
+		$.ajax({
+			url: 'showTaskModal',
+			type: 'post',
+			data: { taskSeq: $(this).attr('taskSeq') },
+			dataType: 'JSON',
+			success: function(result) {
+				console.log(result);
+				console.log(members.get(result.showTask.task_sender));
+				// 신승훈 * 태스크 상세보기 정보 세팅
+				$('#view_task_sender').val(members.get(result.showTask.task_sender).memb_name + " " + result.showTask.task_sender);
+				$('#view_task_name').val(result.showTask.task_name);
+				
+				let staffListStr = '';
+				if(result.showStaff != null){
+					for(let staff of result.showStaff){
+						if(staffListStr === '')
+							staffListStr += members.get(staff.memb_mail).memb_name+"("+staff.memb_mail+")";
+						else
+							staffListStr += ", " + members.get(staff.memb_mail).memb_name+"("+staff.memb_mail+")";
+					}
+				}
+				$('#view_staffInput').val(staffListStr);
+				
+				console.log('result.showTask.task_rank');
+				let viewRankId = $(':radio[name=view_task_rank][value="' + result.showTask.task_rank + '"]').attr('id');
+				$(`#${viewRankId}`).attr('checked', true);
+				$('.view_task_rank_label').removeClass("active");
+				$(`label[for='${viewRankId}']`).addClass("active");
+				
+				let viewRadioId2 = $(':radio[name=view_task_state][value="' + result.showTask.task_state + '"]').attr('id');
+				console.log(viewRadioId2);
+				$(`#${viewRadioId2}`).attr('checked', true);
+				$('.view_task_state_label').removeClass("active");
+				$(`label[for='${viewRadioId2}']`).addClass("active");
+				
+				let isEmptyStartDate;
+				if(result.showTask.exp_startdate == null)
+					isEmptyStartDate = 0;
+				else
+					isEmptyStartDate = 1;
+				
+				$(':radio[name=view_chk_startDate][value="' + isEmptyStartDate + '"]').attr('checked', true);
+				if(isEmptyStartDate == 1){
+					$("#datepicker").show();
+					$('#datepicker').datepicker();
+					$(".gj-icon").show();
+					
+					let year = result.showTask.exp_startdate.substr(0, 4);
+					let month = result.showTask.exp_startdate.substr(5, 2);
+					let day = result.showTask.exp_startdate.substr(8, 2);
+					
+					$('#datepicker').val(month+"/"+day+"/"+year);
+				}else {
+					$("#datepicker").hide();
+					$(".gj-icon").hide();
+				}
+				
+				let isEmptyEndDate;
+				if(result.showTask.exp_enddate == null)
+					isEmptyEndDate = 0;
+				else
+					isEmptyEndDate = 1;
+				
+				$(':radio[name=view_chk_endDate][value="' + isEmptyEndDate + '"]').attr('checked', true);
+				if(isEmptyEndDate == 1){
+					$("#datepicker2").show();
+					$('#datepicker2').datepicker();
+					$(".gj-icon").show();
+					
+					let year = result.showTask.exp_enddate.substr(0, 4);
+					let month = result.showTask.exp_enddate.substr(5, 2);
+					let day = result.showTask.exp_enddate.substr(8, 2);
+					
+					$('#datepicker2').val(month+"/"+day+"/"+year);
+				}else {
+					$("#datepicker2").hide();
+					$(".gj-icon").hide();
+				}
+				
+				$('#view_task_content').val(result.showTask.task_content);
+				
+				let performHTML = '<span class="input-group-text" style="justify-content:center; margin-left:15px; margin-bottom:10px; width:100px;">수행도</span> <ul>';
+				let performIndex = 0;
+				if(result.showStaff != null)
+					for(let staff of result.showStaff){
+						if(staff.memb_mail === [[${#authentication.name}]])
+							performHTML += `<li>${members.get(staff.memb_mail).memb_name} <input type="range" class="view_tsuper_perform" id="perform_${performIndex}" taskSeq="${result.showTask.task_seq}" min="0" max="4" style="width: 250px;"></li>`;
+						else 
+							performHTML += `<li>${members.get(staff.memb_mail).memb_name} <input type="range" class="view_tsuper_perform" id="perform_${performIndex}" taskSeq="${result.showTask.task_seq}" min="0" max="4" style="width: 250px;" disabled></li>`;
+						performIndex++;
+					}
+				performHTML += "</ul>";
+				
+				$('#view_perform_list').html(performHTML);
+				for(let i=0 ; i<performIndex ; i++){
+					$('#perform_'+i).val(result.showStaff[i].tsuper_perform/25);
+				}
+				
+				$('.view_tsuper_perform').change(tsuper_perform_change);
+				
+				// 첨부파일 $("#basic_addon_8").val(result.showTask.);
+			},
+			error: function() {
+				alert('showTaskModal error');
+			}
+		});
+	}
+	
+	// 신승훈 * html 로딩 끝났을때
+	$(document).ready(function () {
+		let taskList = [[${tasklist}]];
+		let mList = [[${list}]];
+		let navi = [[${navi}]];
+		createTaskList(taskList);
+		createNavi(navi);
+		
+		$('#task_sender_checkbox').change(selectTask);
+		$('#task_staff_checkbox').change(selectTask);
+		
+		$('.task_order_btn').click(selectTask);
+		
+		createMembers(mList);
+		
+		$('.view-modal-closeBtn').click(function() {
+			$('#showTaskModal').modal('hide');
+		});
+		
+		$('#searchBtn').click(selectTask);
+	});
+	
+	//신승훈 * mList를 Map으로 변경(for문을 사용 안하기 위해서)
+	let members = new Map();
+	function createMembers(memberList) {
+		for(let member of memberList){
+			members.set(member.memb_mail, member);
+		}
+		console.log(members);
+	}
+	
+	
+</script>
+
+<title>Insert title here</title>
+</head>
+<body>
+	<div id="wrapper">
+		<!-- content 시작 -->
+		<th:block th:replace="fragments/sidebar :: sidebar"></th:block>
+		<!-- content 끝 -->
+
+		<div id="content-wrapper" class="d-flex flex-column">
+			<!-- header 시작 -->
+			<nav th:fragment="navFragment"
+				class="navbar navbar-expand navbar-light bg-white topbar static-top shadow">
+
+				<!-- Sidebar Toggle (Topbar) -->
+				<button id="sidebarToggleTop"
+					class="btn btn-link d-md-none rounded-circle mr-3">
+					<i class="fa fa-bars"></i>
+				</button>
+
+				<!-- Topbar Navbar -->
+				<ul class="navbar-nav ml-auto">
+
+					<!-- Nav Item - Alerts -->
+					<li class="nav-item dropdown no-arrow mx-1"><a
+						class="nav-link dropdown-toggle" href="#" id="alertsDropdown"
+						role="button" data-toggle="dropdown" aria-haspopup="true"
+						aria-expanded="false"> <i class="fas fa-bell fa-fw"></i> <!-- Counter - Alerts -->
+							<span class="badge badge-danger badge-counter">3+</span>
+					</a> <!-- Dropdown - Alerts -->
+						<div
+							class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
+							aria-labelledby="alertsDropdown">
+							<h6 class="dropdown-header">Alerts Center</h6>
+							<a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="mr-3">
+									<div class="icon-circle bg-primary">
+										<i class="fas fa-file-alt text-white"></i>
+									</div>
+								</div>
+								<div>
+									<div class="small text-gray-500">December 12, 2019</div>
+									<span class="font-weight-bold">A new monthly report is
+										ready to download!</span>
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="mr-3">
+									<div class="icon-circle bg-success">
+										<i class="fas fa-donate text-white"></i>
+									</div>
+								</div>
+								<div>
+									<div class="small text-gray-500">December 7, 2019</div>
+									$290.29 has been deposited into your account!
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="mr-3">
+									<div class="icon-circle bg-warning">
+										<i class="fas fa-exclamation-triangle text-white"></i>
+									</div>
+								</div>
+								<div>
+									<div class="small text-gray-500">December 2, 2019</div>
+									Spending Alert: We've noticed unusually high spending for your
+									account.
+								</div>
+							</a> <a class="dropdown-item text-center small text-gray-500"
+								href="#">Show All Alerts</a>
+						</div></li>
+
+					<!-- Nav Item - Messages -->
+					<li class="nav-item dropdown no-arrow mx-1"><a
+						class="nav-link dropdown-toggle" href="#" id="messagesDropdown"
+						role="button" data-toggle="dropdown" aria-haspopup="true"
+						aria-expanded="false"> <i class="fas fa-envelope fa-fw"></i> <!-- Counter - Messages -->
+							<span class="badge badge-danger badge-counter">7</span>
+					</a> <!-- Dropdown - Messages -->
+						<div
+							class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
+							aria-labelledby="messagesDropdown">
+							<h6 class="dropdown-header">Message Center</h6>
+							<a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="dropdown-list-image mr-3">
+									<img class="rounded-circle"
+										th:src="@{/img/undraw_profile_1.svg}" alt="...">
+									<div class="status-indicator bg-success"></div>
+								</div>
+								<div class="font-weight-bold">
+									<div class="text-truncate">Hi there! I am wondering if
+										you can help me with a problem I've been having.</div>
+									<div class="small text-gray-500">Emily Fowler · 58m</div>
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="dropdown-list-image mr-3">
+									<img class="rounded-circle"
+										th:src="@{/img/undraw_profile_2.svg}" alt="...">
+									<div class="status-indicator"></div>
+								</div>
+								<div>
+									<div class="text-truncate">I have the photos that you
+										ordered last month, how would you like them sent to you?</div>
+									<div class="small text-gray-500">Jae Chun · 1d</div>
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="dropdown-list-image mr-3">
+									<img class="rounded-circle"
+										th:src="@{/img/undraw_profile_3.svg}" alt="...">
+									<div class="status-indicator bg-warning"></div>
+								</div>
+								<div>
+									<div class="text-truncate">Last month's report looks
+										great, I am very happy with the progress so far, keep up the
+										good work!</div>
+									<div class="small text-gray-500">Morgan Alvarez · 2d</div>
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="dropdown-list-image mr-3">
+									<img class="rounded-circle"
+										src="https://source.unsplash.com/Mv9hjnEUHR4/60x60" alt="...">
+									<div class="status-indicator bg-success"></div>
+								</div>
+								<div>
+									<div class="text-truncate">Am I a good boy? The reason I
+										ask is because someone told me that people say this to all
+										dogs, even if they aren't good...</div>
+									<div class="small text-gray-500">Chicken the Dog · 2w</div>
+								</div>
+							</a> <a class="dropdown-item text-center small text-gray-500"
+								href="#">Read More Messages</a>
+						</div></li>
+
+					<div class="topbar-divider d-none d-sm-block"></div>
+
+					<!-- Nav Item - User Information -->
+					<li class="nav-item dropdown no-arrow"><a
+						class="nav-link dropdown-toggle" href="#" id="userDropdown"
+						role="button" data-toggle="dropdown" aria-haspopup="true"
+						aria-expanded="false"> <span
+							class="mr-2 d-none d-lg-inline text-gray-600 small">Username</span>
+							<img class="img-profile rounded-circle"
+							th:src="@{/img/undraw_profile.svg}">
+					</a> <!-- Dropdown - User Information -->
+						<div
+							class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+							aria-labelledby="userDropdown">
+							<a class="dropdown-item" href="#"> <i
+								class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> 마이페이지
+							</a> <a class="dropdown-item" href="#"> <i
+								class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i> 화상채팅
+							</a>
+							<div class="dropdown-divider"></div>
+							<a class="dropdown-item" href="#" data-toggle="modal"
+								data-target="#logoutModal"> <i
+								class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+								로그아웃
+							</a>
+						</div></li>
+				</ul>
+			</nav>
+			<nav class="navbar navbar-expand-lg"
+				style="background-color: #f1f3f5; border-bottom: solid 2px black;">
+				<div>
+					<!-- 태스크 추가 modal trigger -->
+					<button class="btn btn-primary" id="newTask" data-bs-toggle="modal"
+						data-bs-target="exampleModal">
+						<i class="fa-solid fa-plus"></i>태스크 추가
+					</button>
+					
+					<div class="btn btn-primary">
+					  <label><input type="checkbox" id="task_sender_checkbox"> 내가 할당</label>
+			    	  <label><input type="checkbox" id="task_staff_checkbox">  내가 담당</label>
+					</div>
+					
+					<button class="btn btn-primary task_order_btn" do="task_state">
+						진행도별	
+					</button>
+					
+					<button class="btn btn-primary task_order_btn" do="task_rank">
+						우선순위별
+					</button>
+					
+					<button class="btn btn-primary task_order_btn" do="bookmark">
+						즐겨찾기별
+					</button>
+					
+					<td style="text-align:left;" class="col-lg-6">
+						 <input type="text" id="searchWord" name="searchWord" th:value="${searchWord}">								
+	                     <button class="btn btn-primary" type="button" id="searchBtn">
+			                     <i class="fas fa-search fa-sm"></i>
+		              	 </button>
+					</td>
+					
+				</div>
+			</nav>
+			<!-- 테스크 목록 출력 -->
+			<div class="col-xl-7 col-md-6 m-3" id="taskListDiv">
+				
+			</div>
+
+			<!-- nav 시작 -->
+			<ul class="pagination" id="naviDiv">
+			</ul>
+			<!-- nav 끝 -->
+
+	<!-- * 신승훈 태스크 상세보기 창 모달 -->
+	<div class="modal fade" id="showTaskModal" tabindex="-1"
+				aria-labelledby="showTaskModalLabel" aria-hidden="true">
+
+				<form>
+					<div class="modal-dialog modal-lg">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title" id="showTaskModalLabel">태스크 상세보기</h5>
+								<button class="ml-auto mr-2 btn btn-primary">수정</button>
+								<button class="mr-2 btn btn-primary">삭제</button>
+								<button type="button" class="btn-close view-modal-closeBtn" data-bs-dismiss="modal" aria-label="Close"></button>
+							</div>
+							<div class="modal-body">
+							
+								<!-- 신승훈 * 할당자 -->
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">할당자</span>
+									</div>
+									
+									<input type="text" id="view_task_sender" class="mr-4 form-control" readonly
+										aria-label="Username" aria-describedby="basic-addon1">
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">담당자</span>
+									</div>
+									<input type="text" class="mr-4 form-control" id="view_staffInput"
+										name="staffs" placeholder="담당자를 추가해주세요" aria-label="Username"
+										value="" aria-describedby="basic-addon1">
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">제목</span>
+									</div> 
+									<input type="text" class="mr-4 form-control" name="task_name" id="view_task_name" readonly
+										placeholder="태스크 제목을 입력하세요" aria-label="Username" required
+										aria-describedby="basic-addon1">
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">우선순위</span>
+									</div>
+									<div class="btn-group btn-group-toggle" data-toggle="buttons">
+										<label class="btn btn-outline-info view_task_rank_label" for="view_task_rank_0"> 
+											<input type="radio" name="view_task_rank" id="view_task_rank_0"
+												class="radioSelection" value="0"> 낮음
+										</label> 
+										<label class="btn btn-outline-info view_task_rank_label" for="view_task_rank_1"> 
+											<input type="radio" name="view_task_rank" id="view_task_rank_1"
+												class="radioSelection" value="1">보통
+										</label> 
+										<label class="btn btn-outline-info view_task_rank_label" for="view_task_rank_2"> 
+											<input type="radio" name="view_task_rank"id="view_task_rank_2"
+												class="radioSelection" value="2"> 높음
+										</label>
+									</div>
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">진행도</span>
+									</div>
+									<div class="btn-group btn-group-toggle" data-toggle="buttons">
+										<label class="btn btn-outline-secondary view_task_state_label" for="view_task_state_0"> 
+											<input type="radio" name="view_task_state" id="view_task_state_0" class="radioSelection" value="0"> 진행전
+										</label> 
+										<label class="btn btn-outline-secondary view_task_state_label" for="view_task_state_1"> 
+											<input type="radio" name="view_task_state" id="view_task_state_1" class="radioSelection" value="1"> 진행중
+										</label> 
+										<label class="btn btn-outline-secondary view_task_state_label" for="view_task_state_2"> 
+											<input type="radio" name="view_task_state" id="view_task_state_2" class="radioSelection" value="2"> 완료
+										</label> 
+										<label class="btn btn-outline-secondary view_task_state_label" for="view_task_state_3"> 
+											<input type="radio" name="view_task_state" id="view_task_state_3" class="radioSelection" value="3"> 보류
+										</label>
+									</div>
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">예상시작일</span>
+										<input type="radio" class="ml-3" id="startNone" name="view_chk_startDate" value="0" checked="checked"><span class="mt-2 ml-1">없음</span>
+										<input type="radio" class="ml-3" id="startExist" name="view_chk_startDate" value="1"><span class="mt-2 ml-1">있음</span>
+										<input id="datepicker" class="ml-3 mt-2" width="150" name="exp_startdate" style="margin-left: 20px;" />
+									</div>
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">예상종료일</span>
+										<input type="radio" class="ml-3" id="endNone" name="view_chk_endDate" value="0"checked="checked"><span class="mt-2 ml-1">없음</span>
+										<input type="radio" class="ml-3" id="endExist" name="view_chk_endDate" value="1"><span class="mt-2 ml-1">있음</span>
+										<input id="datepicker2" class="ml-3 mt-2" width="150" name="exp_enddate" style="margin-left: 20px;" />
+									</div>
+								</div>
+								
+								<!-- 신승훈 * 수행도 -->
+								<div class="slidecontainer" id="view_perform_list">
+	
+								</div>
+								
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">첨부파일</span>
+									</div>
+									<input type="file" onchange="addFile(this);">
+								</div>
+
+								<div class="file-list"></div>
+
+								<div class="input-group m-3">
+									<textarea class="mr-4 form-control" name="task_content" id="view_task_content" readonly style="resize:none;" rows="5">내용을 입력하세요</textarea>
+								</div>
+								
+								
+								<!-- 댓글 html -->
+								<div>
+									
+								</div>
+								<!-- 댓글 html 끝 -->
+								
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-secondary view-modal-closeBtn" data-bs-dismiss="modal">취소</button>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+
+	<script>
+		//다중 파일 업로드
+		var fileNo = 0;
+		var filesArr = new Array();
+
+		/* 첨부파일 추가 */
+		function addFile(obj){
+   		var maxFileCnt = 5;   // 첨부파일 최대 개수
+    	var attFileCnt = document.querySelectorAll('.filebox').length;    // 기존 추가된 첨부파일 개수
+   		var remainFileCnt = maxFileCnt - attFileCnt;    // 추가로 첨부가능한 개수
+    	var curFileCnt = obj.files.length;  // 현재 선택된 첨부파일 개수
+
+    	// 첨부파일 개수 확인
+    	if (curFileCnt > remainFileCnt) {
+        alert("첨부파일은 최대 " + maxFileCnt + "개 까지 첨부 가능합니다.");
+    	} else {
+        for (const file of obj.files) {
+            // 첨부파일 검증
+            if (validation(file)) {
+                // 파일 배열에 담기
+                var reader = new FileReader();
+                reader.onload = function () {
+                    filesArr.push(file);
+                };
+                reader.readAsDataURL(file);
+
+        		// 목록 추가
+                let htmlData = '';
+                htmlData += '<div id="file' + fileNo + '" class="filebox">';
+                htmlData += '   <p class="name">' + file.name + '</p>';
+                htmlData += '   <a class="delete" onclick="deleteFile(' + fileNo + ');"><i class="far fa-minus-square"></i></a>';
+                htmlData += '</div>';
+                $('.file-list').append(htmlData);
+                fileNo++;
+            } else {
+                continue;
+            }
+        }
+    }
+    // 초기화
+    document.querySelector("input[type=file]").value = "";
+	}
+
+	/* 첨부파일 검증 */
+	function validation(obj){
+    const fileTypes = ['application/pdf', 'image/gif', 'image/jpeg', 'image/png', 'image/bmp', 'image/tif', 'application/haansofthwp', 'application/x-hwp'];
+    if (obj.name.length > 100) {
+        alert("파일명이 100자 이상인 파일은 제외되었습니다.");
+        return false;
+    } else if (obj.size > (100 * 1024 * 1024)) {
+        alert("최대 파일 용량인 100MB를 초과한 파일은 제외되었습니다.");
+        return false;
+    } else if (obj.name.lastIndexOf('.') == -1) {
+        alert("확장자가 없는 파일은 제외되었습니다.");
+        return false;
+    } else if (!fileTypes.includes(obj.type)) {
+        alert("첨부가 불가능한 파일은 제외되었습니다.");
+        return false;
+    } else {
+        return true;
+    }
+	}
+
+	/* 첨부파일 삭제 */
+	function deleteFile(num) {
+    document.querySelector("#file" + num).remove();
+    filesArr[num].is_delete = true;
+	}
+	
+	//datepicker 달력 숨겨두기
+		$("#datepicker").hide();
+		$("#datepicker2").hide();
+
+		//새로운 태스크 모달창 제어
+		$("#newTask").click(function(e) {
+			e.preventDefault();
+			$("#exampleModal").modal("show");
+		});
+
+		$("#closeNewTask").click(function(e) {
+			e.preventDefault();
+			$("#exampleModal").modal("hide");
+		});
+
+		//예상 시작일/종료일 제어
+		$("#startNone").change(function() {
+			$("#datepicker").hide();
+			$(".gj-icon").hide();
+		});
+
+		$("#startExist").change(function() {
+
+			$("#datepicker").show();
+			$('#datepicker').datepicker();
+			$(".gj-icon").show();
+		});
+
+		$("#endNone").change(function() {
+			$("#datepicker2").hide();
+			$(".gj-icon").hide();
+		});
+
+		$("#endExist").change(function() {
+			$("#datepicker2").show();
+			$('#datepicker2').datepicker();
+			$(".gj-icon").show();
+		});
+		
+		//담당자 추가
+		$("#staffInput").keyup(function(){
+			console.log('keyup 실행');
+			
+			let val = $("#staffInput").val();
+			
+			console.log(val);
+			
+			if(val == '@'){
+				
+				alert('@ 입력됨');
+			}
+		});
+	</script>
+</body>
+</html>

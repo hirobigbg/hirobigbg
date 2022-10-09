@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<th:block th:replace="fragments/config :: head"></th:block>
+<title>Insert title here</title>
+<style>
+header {
+	height: 75px;
+	padding: 1rem;
+	color: black;
+	background: white;
+	font-weight: bold;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+#searchAjax {
+	padding: 20px;
+}
+
+#roomName {
+	width: 400px;
+	height: 40px;
+	border-top: none;
+	border-left: none;
+	border-right: none;
+	border-bottom: 2px solid black;
+}
+
+#nameDiv {
+	margin: 20px;
+	margin-bottom: 30px;
+}
+
+ul#memList li.mem-item {
+	padding: 4px 8px 5px;
+	background-color: #4CD3E3;
+	color: white;
+	border-radius: 30px;
+	margin: 10px 5px 0 0;
+	display: inline-block;
+	font-size: 14px;
+	letter-spacing: -.5px;
+}
+
+ul#memList li.mem-item:hover {
+	background-color: white;
+	color: #4CD3E3;
+	border: 1px solid #4CD3E3;
+}
+
+.profileBox {
+	width: 50px;
+	height: 50px;
+	border-radius: 70px;
+	overflow: hidden;
+	float: left;
+	position: relative;
+}
+
+.profilePic {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	position: absolute;
+	top: 0;
+	left: 0;
+	margin: 0;
+	padding: 0;
+}
+</style>
+
+</head>
+<body>
+
+	<header>
+		<h3>새로운 채팅</h3>
+	</header>
+
+	<div id="searchAjax" class="form-group">
+		<form th:action="@{../multiRoom/openNewChat}" method="POST"
+			id="newChatForm">
+
+			<div id="mems">
+				<ul id="memList">
+				</ul>
+			</div>
+
+			<input type="text" id="memSearch"
+				class="form-control form-control-user"
+				placeholder="이름 또는 아이디로 검색해보세요!">
+
+			<div id="chatMem"
+				style="overflow: auto; width: 100%; height: 200px; margin: 10px;">
+
+				<table class="table table-hover">
+					<tr th:each="list : ${list}" th:id="${list.memb_mail}"
+						th:name="${list.memb_name}" onclick="appendMem(id);">
+						<td>
+							<div class="profileBox">
+								<img class="profilePic"
+									th:src="@{/savedImg/}+${list.memb_ogfile}"
+									onerror="this.src='../../img/profile.png'">
+							</div>
+						</td>
+						<td th:text="${list.memb_name}"></td>
+						<td th:text="${list.memb_mail}"></td>
+					</tr>
+				</table>
+
+			</div>
+
+
+			<input type="hidden" id="domain" name="prj_domain"
+				th:value="${project.prj_domain}"> <input type="hidden"
+				id="memList2" name="memList2" value="">
+
+			<div id="nameDiv">
+				<h4>채팅방명</h4>
+				<input type="text" id="roomName" name="chatroom_name">
+			</div>
+
+			<div class="col text-center">
+				<button type="submit" class="btn btn-primary">채팅방 오픈</button>
+			</div>
+
+		</form>
+
+	</div>
+	<script>
+		$("#memSearch").keyup(function() {
+
+			let val = $(this).val();
+
+			if (val.match("@")) {
+				$.ajax({
+					url : "member/memSearch",
+					type : "POST",
+					data : {
+
+					},
+					dataType : 'json',
+					success : function(result) {
+
+					}
+				});
+			}
+
+		});
+
+		function appendMem(id) {
+
+			/*$("#staffNotice").hide();*/
+
+			console.log('appendMem 실행됨' + id);
+
+			var list = document.querySelectorAll('li.mem-item');
+
+			let memLists = new Array();
+
+			for (var i = 0; i < list.length; i++) {
+				memLists[i] = list[i].id;
+			}
+
+			var li = $("#memList2").val();
+
+			if (memLists.includes(id)) {
+
+				alert('이미 추가된 멤버입니다.');
+
+			} else {
+
+				li += id + ",";
+
+				$("#memList2").val(li);
+
+				$
+						.ajax({
+
+							url : "../../member/memSearch",
+							type : "POST",
+							data : {
+								memb_mail : id
+							},
+							success : function(result) {
+
+								console.log(result);
+
+								$("#memList")
+										.append(
+												"<li class='mem-item' id= "+ id +  ">"
+														+ "<span>"
+														+ result
+														+ "</span>"
+														+ "<span class='del-btn' idx='" + id + "'>&nbsp;x</span></li>");
+							}
+						});
+			}
+		}
+
+		//x 누르면 없어짐.
+		$(document).on("click", ".del-btn", function(e) {
+			var index = $(this).attr("idx");
+			$(this).parent().remove();
+		});
+	</script>
+</body>
+</html>

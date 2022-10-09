@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+</head>
+<body>
+<!-- 차트 연습 -->
+	<div class="container">
+		<div class="row">
+			<div class="col-md-12">
+				<canvas id="myChartOne"></canvas>
+			</div>
+		</div>
+	</div>
+	<script>
+	function showPop() {
+
+        console.log('showPop 실행');
+
+        window.open("multiRoom/chatHome", "메신저",
+              "width=500, height=700, top=10, left=10");
+     }
+	
+	
+	let myChartOne = document.getElementById('myChartOne').getContext('2d');
+
+	let barChart = new Chart(myChartOne,{
+		type : 'bar', //pir,line,doughnut,polarArea
+		data : {
+			labels :['학원','연구원','출판사','미디어사','위니브'],
+			datasets : [{
+				labels :'바울랩 매출액',
+			data : [
+				10,
+				100,
+				100,
+				200,
+				1000
+			]
+			}]	
+		}
+	})
+	</script>
+</body>
+</html>

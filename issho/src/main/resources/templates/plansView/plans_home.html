@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<th:block th:replace="fragments/config :: configFragment"></th:block>
+<head>
+	
+	<title>calendar</title>
+	
+	<!-- bootstrap 4 -->
+	<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+	
+	<!-- fullcalendar CDN -->
+	<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/main.min.css' rel='stylesheet'/>
+	<script th:src='@{/js/plan/fullcalendar.js}'></script>
+	
+	<!-- toggle -->
+	<link href="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/css/bootstrap4-toggle.min.css" rel="stylesheet">
+	<script src="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/js/bootstrap4-toggle.min.js"></script>
+	
+	<style>
+		.hiding {
+			display:none;
+		}
+		.attendees{
+			margin-left: 30px;
+		}
+		.attendees2{
+			margin-left: 30px;
+		}
+		 #calendarBox{
+	        width: 70%;
+	        padding-left: 5%;
+	        padding-right: 5%;
+	    }
+	</style>
+	
+	<script type="text/javascript" th:inline="javascript">
+	let eventList;
+	let username;
+	
+	document.addEventListener('DOMContentLoaded', function () {
+		/*<!CDATA[*/
+		eventList = [[${attendantlist}]];
+		username = [[${#authentication.name}]];
+		
+		let arrMemberList = [[${attendees}]];
+		/*]]>*/
+	    
+		createCalendar();
+	    
+	 	// 참석여부 ajax
+		$("#view_att_whether").change(function(){
+			console.log("참석여부 " + $(this).is(':checked'));
+			$.ajax({
+				url: 'ifYouWillAttend',
+				type: 'post',
+				data: { att_whether: $(this).is(':checked')
+					,      plan_seq: $('#updatePlan_seq').val()},
+				success: function() {
+					console.log("success");
+					createCalendar();
+				},
+				error: function() {
+					alert('error');
+				}
+			});
+		});
+	});
+	
+	function showPop() {
+        console.log('showPop 실행');
+
+        window.open("multiRoom/chatHome", "메신저",
+              "width=500, height=700, top=10, left=10");
+     }
+	
+	//참석여부 변경 후 일정 새로고침
+	function selectEventObjList(){
+		$.ajax({
+			url: 'planRenewal',
+			type: 'post',
+			dateType: 'json',
+			async: false,
+			success: function(eventObjList) {
+				console.log("확인");
+				console.log(eventObjList);
+				eventList=eventObjList;
+			},
+			error: function() {
+				alert('error');
+			}
+		});
+	}
+	
+	function createCalendar(){
+		selectEventObjList();
+		var calendarEl = document.getElementById('calendar');
+	    var calendar = new FullCalendar.Calendar(calendarEl, {
+	    	timeZone: 'Asia/Seoul',
+	    	initialView: 'dayGridMonth', 	// 홈페이지에서 다른 형태의 view를 확인할  수 있다.
+	        events: createJson(eventList)	// event 추가
+	        , headerToolbar: {
+	            left: 'addEventButton,prev,next today',
+	            center: 'title',
+	            right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+	        }, customButtons: {
+	            addEventButton: { 			// 추가한 버튼 설정
+	                text : "일정추가",  		// 버튼 내용
+	                click : function(){ 	// 버튼 클릭 시 이벤트 추가
+	                    $("#calendarModal").modal("show");  	  // modal 나타내기
+	                    $("#addCalendar").on("click",function(){  // modal의 추가 버튼 클릭 시
+	                        var content = $("#plan_name").val();
+	                        var start_date = $("#calendar_start_date").val();
+	                        var end_date = $("#calendar_end_date").val();
+	                        
+	                        // 내용 입력 여부 확인
+	                        // 날짜 Date 타입으로 변경 후 확인
+	                        if(content == null || content == ""){
+	                            alert("제목을 입력하세요.");
+	                            return;
+	                        }else if(start_date == "" || end_date ==""){
+	                            alert("날짜를 입력하세요.");
+	                            return;
+	                        }else if(new Date(end_date)- new Date(start_date) < 0){ 
+	                            alert("종료일이 시작일보다 먼저입니다.");
+	                            return;
+	                        }
+	                        // addPlan
+	                        $('#addPlan').submit();
+	                    });
+	                }
+	            }
+	        }, 
+	        displayEventTime: false,    // 시간 표시
+	        nowIndicator: true,         // 현재 시간 마크
+	        dayMaxEvents: true,         // 이벤트가 오버되면 높이 제한 (+ 몇 개식으로 표현)
+	        height: '700px',            // calendar 높이 설정
+	        expandRows: true,           // 화면에 맞게 높이 재설정
+	        locale: 'ko',				// 언어설정
+	        eventClick: function (info){// 클릭했을때의 이벤트 (상세보기)
+	        	console.log(info.event);
+	       
+	        	$("#DetailcalendarModal").modal("show");						  // modal 나타내기
+	        	$("#updatePlan_seq").val(info.event._def.extendedProps.plan_seq); // 수정시 seq번호 전송
+	        	$("#deletePlan_seq").val(info.event._def.extendedProps.plan_seq); // 삭제시 seq번호 전송
+	        	
+	        	let checkBoxs = $('.updateCheck');
+	        	let arrAttendant = new Array();
+	        	let arrOnOfAttendant = new Array();
+	        	for(let i=0 ; i<info.event._def.extendedProps.attendantList.length ; i++){
+	        		arrAttendant.push(info.event._def.extendedProps.attendantList[i].memb_mail);
+	        		if(info.event._def.extendedProps.attendantList[i].att_whether === 1)
+	        			arrOnOfAttendant.push(info.event._def.extendedProps.attendantList[i].memb_mail);
+	        	}
+	        	for(let i=0 ; i<checkBoxs.length ; i++){
+	        		if(arrAttendant.includes(checkBoxs[i].value))
+	        			checkBoxs[i].checked = true;
+	        		else
+	        			checkBoxs[i].checked = false;
+	        	}
+	        	let att_whetherList = $('.att_whetherOfAttendee');
+	        	for(let i=0 ; i<att_whetherList.length ; i++){
+	        		if(arrOnOfAttendant.includes(att_whetherList[i].getAttribute('membMail')))
+	        			$(att_whetherList[i]).bootstrapToggle('on');
+	        	}
+	        	
+	        	// modal 안 p 하나하나에 info.event._def.title... 이런것들을 세팅
+	        	$("#viewPlan_name").val(info.event._def.title);
+	        	$("#viewPlan_startDate").val(dateFormat(info.event._instance.range.start));
+	        	$("#viewPlan_endDate").val(dateFormat(info.event._instance.range.end));
+	        	$("#viewPlan_place").val(info.event._def.extendedProps.plan_place);
+	        	$("#viewPlan_priority").val(info.event._def.extendedProps.plan_priority);
+	        	$("#viewPlan_content").val(info.event._def.extendedProps.plan_content);
+	        	
+	        	console.log("체크되있음?");
+	        	console.log($('#view_att_whether').is(':checked'));
+	        	console.log(info.event._def.extendedProps.att_whether);
+	        	
+	        	// 데이터베이스 자주 오류나서 결과가 오류날수있으나 코드상으론 문제없음
+	        	if(info.event._def.extendedProps.att_whether===1)
+	        		$('#view_att_whether').bootstrapToggle('on');
+	        	if(info.event._def.extendedProps.att_whether===0)
+	        		$('#view_att_whether').bootstrapToggle('off');
+	        	
+	        	if(username === info.event._def.extendedProps.memb_mail){
+	        		$('#isWhether').addClass("hiding");
+	        		$('#view_att_whether').bootstrapToggle('on');
+	        	} else {
+	        		$('#isWhether').removeClass("hiding");
+	        		if(info.event._def.extendedProps.att_whether === 1){
+	        			console.log("2");
+		        		$('#view_att_whether').bootstrapToggle('on');
+	        		}
+    				else{
+    					console.log("3");
+    	        		$('#view_att_whether').bootstrapToggle('off');
+    				}
+	        	}
+	        	
+	        	// 일정을 작성한 작성자가 상세보기를 클릭시 수정, 삭제 버튼 
+	        	// 버튼 중복 추가 방지를 위해 updateCalendar 객체가 class "btn btn-primary" 을 가지고 있는지 체크
+	        	if(username === info.event._def.extendedProps.memb_mail && $("#updateCalendar").hasClass("btn btn-primary") === false)
+	        		$("#modal-footer").append(`
+		        			<button type="button" class="btn btn-primary" id="updateCalendar">수정</button>
+		                    <button type="button" class="btn btn-danger" id="deleteCalendar">삭제</button>
+        			`);
+                
+	        	//수정버튼 클릭시
+	        	$("#updateCalendar").on("click",function(){
+	        		$('#updatePlan').submit();
+	        	});
+	        	
+	        	//삭제버튼 클릭시
+	        	$("#deleteCalendar").on("click",function(){
+	        		 $('#deletePlan').submit();
+	        	});
+	        }
+	    });
+	    calendar.render();
+	    console.log("수정됨");
+	}
+	
+	function dateFormat(dateStr) {
+		let date = new Date(dateStr)
+		date.setHours(date.getHours()-9);
+        let month = date.getMonth() + 1;
+        let day = date.getDate();
+        let hour = date.getHours();
+        let minute = date.getMinutes();
+        let second = date.getSeconds();
+
+        month = month >= 10 ? month : '0' + month;
+        day = day >= 10 ? day : '0' + day;
+        hour = hour >= 10 ? hour : '0' + hour;
+        minute = minute >= 10 ? minute : '0' + minute;
+        second = second >= 10 ? second : '0' + second;
+
+        return date.getFullYear() + '-' + month + '-' + day + 'T' + hour + ':' + minute + ':' + second;
+	}
+	
+	function createJson(str){
+		var plans = new Array();
+		for(let tempPlan of str){
+			var plan = new Object();
+			plan.plan_seq = tempPlan.plan_seq;
+			plan.title = tempPlan.plan_name;
+			plan.start = tempPlan.plan_startDate;
+			plan.end = tempPlan.plan_endDate;
+			plan.plan_priority = tempPlan.plan_priority;
+			plan.plan_content = tempPlan.plan_content;
+			plan.plan_place = tempPlan.plan_place;
+			plan.attendantList = tempPlan.attendantList;
+			plan.att_whether = tempPlan.att_whether;
+			plan.memb_mail = tempPlan.memb_mail;
+			plans.push(plan);
+	}
+		
+		return plans;
+	}
+	
+	
+	
+	
+	</script>
+</head>
+<body>
+	<div id="wrapper">
+		<!-- content 시작 -->
+		<th:block th:replace="fragments/sidebar :: sidebar"></th:block>
+		<!-- content 끝 -->
+		
+		<div id="content-wrapper" class="d-flex flex-column">
+		
+			<!-- header 시작 -->
+			<th:block th:replace="fragments/header :: navFragment"></th:block>
+			<!-- header 끝 -->
+		
+			<!-- calendar 태그 -->
+			<div>
+				<div style="float:left; width:80%;" id="calendarBox">
+				<div id="calendar"></div>
+			</div>
+			    
+			<!-- 일정추가 modal 추가 -->
+			<form th:action="|@{/}${session.prj_domain}/plans/savePlan|" method="post" id="addPlan">
+				<div class="modal fade" id="calendarModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+				    aria-hidden="true">
+				    <div class="modal-dialog" role="document">
+				        <div class="modal-content">
+				            <div class="modal-header">
+				                <h5 class="modal-title" id="exampleModalLabel">일정을 입력하세요.</h5>
+				                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				                    <span aria-hidden="true">&times;</span>
+				                </button>
+				            </div>
+				            <div class="modal-body">
+				                <div class="form-group">
+				                    <label for="taskId" class="col-form-label">일정 제목</label>
+				                    <input type="text" class="form-control" id="plan_name" name="plan_name">
+				
+				                    <label for="taskId" class="col-form-label">참석자</label>
+			                    	<th:block th:each="attendee : ${attendees}">
+			                    		<p th:if="${#authentication.name} != ${attendee.memb_mail}" class="attendees">
+			                    			<input type="checkbox" class="custom-control-input" th:id="|customCheck_${attendee.memb_name}|" name="attendees" th:value="${attendee.memb_mail}">
+	      									<label class="custom-control-label" th:for="|customCheck_${attendee.memb_name}|" th:text="${attendee.memb_name}">참석자A</label>
+			                    		</p>
+		                    	     </th:block> 
+									
+									<label for="taskId" class="col-form-label">중요도</label>
+				                    <select name="plan_priority" style="width:100px;">
+			                            <option value="2" selected="selected">상</option>
+			                            <option value="1">중</option>
+			                            <option value="0">하</option>
+				                    </select>
+				                    <br>
+									
+				                    <label for="taskId" class="col-form-label">일정 시작일</label>
+				                    <input type="datetime-local" class="form-control" id="plan_startDate" name="plan_startDate">
+				                    <label for="taskId" class="col-form-label">일정 종료일</label>
+				                    <input type="datetime-local" class="form-control" id="plan_endDate" name="plan_endDate">
+				
+				                    <label for="taskId" class="col-form-label">일정 장소</label>
+				                    <input type="text" class="form-control" id="plan_place" name="plan_place">
+				
+									<label for="taskId" class="col-form-label">일정 내용</label>
+				                    <input type="text" class="form-control" id="plan_content" name="plan_content">
+				                    </div>
+				                </div>
+				                <div class="modal-footer">
+				                	<button type="button" class="btn btn-warning" data-dismiss="modal" id="sprintSettingModalClose">닫기</button>
+				                    <button type="button" class="btn btn-primary" id="addCalendar">추가</button>
+				                </div>
+				            </div>
+				        </div>
+				    </div>
+				</div>
+			</form>
+		
+		<!-- 클릭시 상세보기, 수정, 삭제  -->
+		<div class="modal fade" id="DetailcalendarModal" tabindex="-1"
+					role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+		    <div class="modal-dialog" role="document">
+		        <div class="modal-content">
+		            <div class="modal-header">
+		                <h5 class="modal-title" id="exampleModalLabel">일정 상세정보</h5>
+		                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+		                    <span aria-hidden="true">&times;</span>
+		                </button>
+		            </div>
+		            <div class="modal-body">
+		                <div class="form-group">
+			                <form th:action="|@{/}${session.prj_domain}/plans/updatePlan|" method="post" id="updatePlan">
+			                	<input type="hidden" name="plan_seq" id="updatePlan_seq" value=""/>
+			                	
+			                    <label for="taskId" class="col-form-label">일정 제목</label>
+			                    <input type="text" class="form-control" id="viewPlan_name" name="plan_name">
+			
+			                    <label for="taskId" class="col-form-label" >참석자</label>
+		                    	<th:block th:each="attendee : ${attendees}">
+		                    		<p th:if="${#authentication.name} != ${attendee.memb_mail}" class="attendees2">
+		                    			<input type="checkbox" class="custom-control-input updateCheck" th:id="|updateCheck_${attendee.memb_name}|" name="attendees" th:value="${attendee.memb_mail}">
+      									<label class="custom-control-label" th:for="|updateCheck_${attendee.memb_name}|" th:text="${attendee.memb_name}">참석자A</label>
+      									<input class="att_whetherOfAttendee" th:membMail="${attendee.memb_mail}" type="checkbox" data-toggle="toggle" data-on="참석" data-off="불참" data-onstyle="primary" data-offstyle="danger" data-width="50" data-size="xs" readonly>
+		                    		</p>
+	                    	     </th:block> 
+								
+								<label for="taskId" class="col-form-label">중요도</label>
+			                    <select id="viewPlan_priority" name="plan_priority" style="width:100px;">
+		                            <option value="2" selected="selected">상</option>
+		                            <option value="1">중</option>
+		                            <option value="0">하</option>
+		                        </select>
+								<br>
+			                    <label for="taskId" class="col-form-label">일정 시작일</label>
+			                    <input type="datetime-local" class="form-control" id="viewPlan_startDate" name="plan_startDate">
+			                    <label for="taskId" class="col-form-label">일정 종료일</label>
+			                    <input type="datetime-local" class="form-control" id="viewPlan_endDate" name="plan_endDate">
+			
+			                    <label for="taskId" class="col-form-label">일정 장소</label>
+			                    <input type="text" class="form-control" id="viewPlan_place" name="plan_place">
+			
+		                        <label for="viewPlan_content" class="col-form-label">일정 내용</label>
+		                        <input type="text" class="form-control" id="viewPlan_content" name="plan_content">
+		      					<br>
+		                        <div id="isWhether">
+		                        	<label for="viewPlan_att_whether" class="col-form-label">참석 여부</label>
+		        					<input type="checkbox" class="form-control view-att-whether" data-toggle="toggle" data-on="참석" data-off="불참" data-width="80" id="view_att_whether" name="plan_att_whether">
+			                    </div>
+		                    </form>
+		                    
+		                    <form th:action="|@{/}${session.prj_domain}/plans/deletePlan|" method="post" id="deletePlan">
+			                	<input type="hidden" name="plan_seq" id="deletePlan_seq"/>
+		                	</form>
+		                </div>
+		                <div class="modal-footer" id="modal-footer">
+		                	<button type="button" class="btn btn-warning" data-dismiss="modal">닫기</button>
+		                </div>
+		            </div>
+		        </div>
+		    </div>
+		</div>
+		
+		<!-- footer 시작 -->
+		<th:block th:replace="fragments/footer :: footerFragment"></th:block>
+		<!-- footer 끝 -->
+		
+		</div>
+	</div>
+</body>
+</html>

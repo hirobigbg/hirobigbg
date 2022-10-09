@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head th:replace="fragments/config :: configFragment">
+<meta charset="UTF-8">
+<title>issho - 공지사항</title>
+</head>
+<body>
+<!-- 홍상혁 : 페이징을 위한 자바 스크립트-->
+<script>
+//글쓰기폼 확인
+function validation() {
+//	alert("validation");
+	let title = $('#notice_name').val();
+	let contents = $('#notice_contents').val();
+	
+	if (title.length < 5 || title.length > 30) {
+		alert("제목은 5자 이상 30자 이하로 입력하세요.");
+		$('#notice_name').focus();
+		$('#notice_name').select();
+		return false;
+	}
+	
+	if (contents.length < 5  || contents.length > 1000) {
+		alert("내용은 5자 이상 1000자 이하로 입력하세요.");
+		$('#notice_contents').focus();
+		$('#notice_contents').select();
+		return false;
+	}
+	return true;
+}
+function showPop() {
+
+    console.log('showPop 실행');
+
+    window.open("multiRoom/chatHome", "메신저",
+          "width=500, height=700, top=10, left=10");
+}
+</script>	
+	<div id="wrapper">
+		<!-- content 시작 -->
+		<th:block th:replace="fragments/sidebar :: sidebar"></th:block>
+		<!-- content 끝 -->
+
+		<div id="content-wrapper" class="d-flex flex-column">
+			<!-- header 시작 -->
+			<th:block th:replace="fragments/header :: navFragment"></th:block>
+			<!-- header 끝 -->
+			
+			<!-- [SHHONG] 표 시작 -->
+<!-- 			<div class="container-fluid" width="80%">  -->
+	 			<div class="container-fluid	">
+						
+					<h2 th:text="${noticeDetail}?'공지사항 수정화면':_">공지사항 작성</h2>
+					<p>프로젝트 공지사항을 작성하세요</p>            
+<!--					
+					<form class="col-lg-10" th:action="${noticeDetail}?@{notice/updateNotice}:@{notice/writeNotice}" method="post" 
+							enctype="multipart/form-data" onsubmit="return validation();">
+-->
+<!--					<form class="col-lg-10" th:action="${noticeDetail}?'/issho/' + ${noticeDetail.prj_domain} + '/notice/updateNotice':'/issho/' + ${prj_domain} + '/notice/writeNotice'" method="post" 
+							enctype="multipart/form-data" onsubmit="return validation();"> -->
+					<form class="col-lg-10" th:action="${noticeDetail}?@{updateNotice}:@{writeNotice}" method="post" 
+							enctype="multipart/form-data" onsubmit="return validation();"> 
+						<th:block th:if="${noticeDetail}">
+							<input type="hidden" name="notice_seq" id="notice_seq" 
+								th:value="${noticeDetail.notice_seq}" />
+						</th:block>
+						<input type="hidden" name="prj_domain" id="prj_domain" 
+								th:value="${noticeDetail}?${noticeDetail.prj_domain}:${prj_domain}" />
+						<table>
+							<tr class="col-lg-8" height="60px">
+								<td class="col-lg-1 text-left"><b>제목 :</b></td>
+								<td class="col-lg-7">
+									<input type="text" th:value="${noticeDetail}?${noticeDetail.notice_name}:_" 
+										class="form-control" id="notice_name" name="notice_name" placeholder="제목을 입력하세요">
+								</td>
+							</tr>
+							<tr class="col-lg-8" >
+								<td class="col-lg-1 text-top text-left"><b>내용 :</b></td>
+								<td class="col-lg-7">
+									<textarea class="form-control" rows="13	" id="notice_contents" name="notice_contents" 
+										th:text="${noticeDetail}?${noticeDetail.notice_contents}:_" placeholder="공지할 내용을 입력하세요"></textarea>
+								</td>
+							</tr>
+							<tr>
+								<td class="col-lg-1 text-left" height="60px"><b>첨부파일 :</b></td>
+								<td><input class="col-lg-7" type="file" id="upload" name="upload">
+									<span th:if="${noticeDetail}">	
+										<i class="fas fa-file-alt btn"></i>
+										<strong><a th:href="@{./fileDownload(notice_seq=${noticeDetail.notice_seq})}"
+													th:text="${noticeDetail.notice_ogFilr}?${noticeDetail.notice_ogFilr} +' (이미 등록된 파일)':_"></a></strong>	
+										<!-- <span th:text="${noticeDetail.notice_ogFilr}"></span> -->
+									</span>
+								</td>
+							</tr>
+							<tr>
+								<td class="text-center" colspan="2" >
+									<input type="submit" class="btn btn-primary" 
+											th:value="${noticeDetail}?'　수정　':'　저장　'"/> 	
+									<input type="reset" class="btn btn-primary" value="다시입력"/>
+								</td>
+							</tr>
+						</table>
+					</form>
+				<br><br>
+			</div>
+			
+			<!-- [SHHONG] 표 끝 -->
+			
+			<!-- footer 시작 -->
+			<th:block th:replace="fragments/footer :: footerFragment"></th:block>
+			<!-- footer 끝 -->
+		</div>
+	</div>
+
+</body>
+</html>

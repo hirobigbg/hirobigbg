@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head th:replace="fragments/config :: configFragment">
+<meta charset="UTF-8">
+<title>issho - 공지사항</title>
+</head>
+
+<body>
+<!-- 홍상혁 : 페이징을 위한 자바 스크립트-->
+<script>
+function pagingFormSubmit(currentPage) {
+	var form = $('#pagingForm');
+	var page = $('#page');
+	var type = $('#type');
+	var searchWord = $('#searchWord');
+	
+// form 디자인 관련 page 값을 Controller로 전달 못하는 상황이 발생하여 수정	
+//	page.value = currentPage;
+	page.val(currentPage);
+	form.submit();
+}
+
+function test() {
+	alert("test");
+	location.href = '/notice/writeNotice';
+}
+
+function showPop() {
+
+    console.log('showPop 실행');
+
+    window.open("multiRoom/chatHome", "메신저",
+          "width=500, height=700, top=10, left=10");
+}
+
+</script>
+
+	<div id="wrapper">
+		<!-- content 시작 -->
+		<th:block th:replace="fragments/sidebar :: sidebar"></th:block>
+		<!-- content 끝 -->
+
+		<div id="content-wrapper" class="d-flex flex-column">
+			<!-- header 시작 -->
+			<th:block th:replace="fragments/header :: navFragment"></th:block>
+			<!-- header 끝 -->
+			
+			<!-- [SHHONG] 표 시작 -->
+<!-- 			<div class="container-fluid" width="80%">  -->
+	 			<div class="container">
+						
+				<h2>프로젝트 공지사항</h2>
+				<div class="d-flex mb-3">
+					<h5 class="text-primary">[ [[${prj_name}]] ]</h5>
+					<h5>프로젝트의 공지사항입니다</h5>         
+				</div>
+				
+				<!-- 검색폼 -->
+					<table class="table table-bordered table-hover table-condensed" >
+						<tr>
+					<form id="pagingForm" method="get" th:action="@{./noticeList}">
+						<td style="text-align:left;" class="col-lg-2">
+							<input type="hidden" id="pf_prj_domain" name="prj_domain" th:value="${prj_domain}"/>
+							<input type="hidden" id="page" name="page"/>
+							<b>조회된 갯수 : <span th:text="${navi.totalRecordsCount}"></span></b>
+						</td>
+						<td style="text-align:left;" class="col-lg-1">
+							<select id="type" name="type">
+								<option value="notice_name" th:selected="${type} == 'notice_name'">제목</option>
+								<option value="memb_name" th:selected="${type} == 'memb_name'">작성자</option>
+								<option value="notice_date" th:selected="${type} == 'notice_date'">작성일</option>
+								<option value="notice_contents" th:selected="${type} == 'notice_contents'">내용</option>
+							</select>
+						</td>
+						<td style="text-align:left;" class="col-lg-6">
+							<input type="text" id="searchWord" name="searchWord" th:value="${searchWord}">								
+		                              <button class="btn btn-primary" type="button" onclick="pagingFormSubmit(1)">
+				                     <i class="fas fa-search fa-sm"></i>
+			                    </button>
+		
+						</td>
+					</form>
+							<td style="text-align:right;" class="col-lg-4">
+								<form action="writeNotice" method="get">
+									<input type="hidden" id="prj_domain" name="prj_domain" th:value="${prj_domain}">
+									<input type="submit" class="btn btn-primary" value="공지 작성">
+								</form>
+							</td>	
+						</tr>
+					</table>
+						
+
+				<table class="table-bordered table-hover table-condensed bg-white" width="100%">
+					<thead class="text-center " style="background-color: rgb(217, 217, 217)">
+						<tr style="color:black;" height="50px">
+						    <th class="col-lg-1">번호</th>
+						    <th class="col-lg-5">제목</th>
+						    <th class="col-lg-1">작성자</th>
+						    <th class="col-lg-2">작성일</th>
+						    <th class="col-lg-1">조회수</th>
+						  <!-- 추후 수정/삭제 버튼 필요시  <th class="col-lg-2"></th> -->
+
+						</tr>
+					</thead>
+				<th:block th:unless="${noticeList}">
+				  	<tbody class="text-center">
+						<tr>
+							<td class="text-info" colspan=7 height="100px"><h3>공지사항이 없습니다.</h3></td>
+						</tr>
+					</tbody>
+				</th:block>
+				
+				<th:block th:if="${noticeList}">
+				  	<tbody class="text-center">
+						<tr th:each="notice : ${noticeList}" height="40px">
+						    <td class="col-lg-1" th:text="${notice.notice_seq}">번호</td>
+						    <td>
+			    				<a th:text="${notice.notice_name}" th:href="@{./readNotice(notice_seq=${notice.notice_seq})}">제목</a>
+						    </td>
+						    <td class="col-lg-1" th:text="${notice.memb_name}">작성자</td>
+						    <td class="col-lg-2" th:text="${notice.notice_date}">작성일</td>
+						    <td class="col-lg-1" th:text="${notice.notice_hits}">조회수</td>
+<!--   추후 수정/삭제 버튼 필요시						
+						    <td class="col-lg-2">
+								<button type="button" class="btn btn-primary" th:href="@{/notice/updateNotice(notice_seq=${notice.notice_seq})}">수정</button>
+								<button type="button" class="btn btn-primary" th:href="@{/notice/deleteNotice(notice_seq=${notice.notice_seq})}">삭제</button>
+								<button type="button" class="btn btn-primary" onclick="pagingFormSubmit(1)">삭제</button>
+						    </td> 		
+-->
+ 						</tr> 						
+				 	</tbody>
+				</th:block>
+			 </table>
+					</div>
+					
+					
+				<!-- nav 시작 -->
+						<div class="navigator" style="text-align: center; margin-top: 5px;">
+							<a class="btn btn-primary"
+								th:href="|javascript:pagingFormSubmit(${navi.currentPage - 1})|">Previous</a>
+
+							<span th:each="counter : ${#numbers.sequence(navi.startPageGroup, navi.endPageGroup)}">
+								<th:block th:if="${counter == navi.currentPage}">
+									<a class="btn btn-light font-weight-bold" th:text="${counter}"
+										th:href="|javascript:pagingFormSubmit(${counter})|"></a>&nbsp;
+								</th:block>
+								<th:block th:unless="${counter == navi.currentPage}">
+									<a class="btn btn-light" th:text="${counter}"
+										th:href="|javascript:pagingFormSubmit(${counter})|"></a>&nbsp;
+								</th:block>
+							</span> <a class="btn btn-primary"
+								th:href="|javascript:pagingFormSubmit(${navi.currentPage + 1})|">　Next　</a>
+							<br> <br>
+						</div>
+
+				<!-- nav 끝 -->
+			<!-- [SHHONG] 표 끝 -->
+			
+			<!-- footer 시작 -->
+			<th:block th:replace="fragments/footer :: footerFragment"></th:block>
+			<!-- footer 끝 -->
+		</div>
+	</div>
+
+</body>
+</html>

@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head th:replace="fragmentsManager/config :: configFragment">
+<meta charset="UTF-8">
+<title>구성원 페이지</title>
+<link rel="stylesheet"
+	href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css">
+<!-- CSS only -->
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css"
+	rel="stylesheet"
+	integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT"
+	crossorigin="anonymous">
+	
+	<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+<style>
+</style>
+</head>
+<body>
+
+	<div id="wrapper">
+		<!-- content 시작 -->
+		<th:block th:replace="fragmentsManager/sidebar :: sidebar"></th:block>
+		<!-- content 끝 -->
+
+		<div id="content-wrapper" class="d-flex flex-column">
+			<!-- header 시작 -->
+			<th:block th:replace="fragmentsManager/header :: navFragment"></th:block>
+
+			<!-- header 끝 -->
+			<div class="container-fluid">
+
+				<!-- Page Heading -->
+				<h1 class="h3 mb-2 text-gray-800">구성원 관리</h1>
+
+				<!-- DataTales Example -->
+				<div class="card shadow mb-4">
+					<div class="card-header py-3">
+						<h6 class="m-0 font-weight-bold text-primary">멤버 리스트</h6>
+					</div>
+
+					<div>
+
+						<div id="dataTable_filter" class="dataTables_filter">
+							<form class="form-inline" id="pagingForm" method="get"
+								th:action="@{../manager/member}">
+								<input type="hidden" name="page" id="page">
+
+								<div id="listTop">
+
+									<!-- <p>검색된 수 : <span th:text="${navi.totalRecordsCount}"></span>명</p> -->
+
+
+									<label class="mr-sm-2" id="listTop1"> <input
+										type="text" id="listTop1" class="form-control mb-2 mr-sm-2"
+										name="searchWord" th:value="${searchWord}">
+										<button class="btn btn-primary mb-2" type="button"
+											onclick="pagingFormSubmit(1)">
+											<i class="fas fa-search fa-sm"></i>
+										</button>
+									</label>
+
+
+								</div>
+
+							</form>
+
+						</div>
+					</div>
+					<div class="card-body">
+						<div class="table-responsive">
+							<div id="dataTable_wrapper"
+								class="dataTables_wrapper dt-bootstrap4">
+								<div class="row">
+									<div class="col-sm-12 col-md-6">
+										<div class="dataTables_length" id="dataTable_length"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-sm-12">
+								<!-- 삭제시 전송할 폼 -->
+								<form th:action="|@{/}${session.prj_domain}/manager/deleteMember|" method="get"
+									id="deleteForm">
+									<input type="hidden" name="email" id="email">
+								</form>
+								<!-- 멤버 권한변경시 전송할 폼 -->
+								<form th:action="|@{/}${session.prj_domain}/manager/editMembRight|" method="get"
+									id="editMembRightForm">
+									<input type="hidden" name="email" id="Memail">
+								</form>
+								<!-- PM 권한변경시 전송할 폼 -->
+								<form th:action="|@{/}${session.prj_domain}/manager/editPMRight|" method="get"
+									id="editPMRightForm">
+									<input type="hidden" name="email" id="PMemail">
+								</form>
+
+								<form action="">
+									<table class="table table-bordered dataTable" id="dataTable"
+										width="100%" cellspacing="0" role="grid"
+										aria-describedby="dataTable_info" style="width: 100%;">
+										<thead>
+											<tr role="row">
+												
+												<th class="sorting sorting_asc" tabindex="0"
+													aria-controls="dataTable" rowspan="1" colspan="1"
+													aria-sort="ascending" style="width: 30px; text-align: center;">프로필사진</th>
+												<th class="sorting" tabindex="0" aria-controls="dataTable"
+													rowspan="1" colspan="1" style="width: 50px; ">이름</th>
+												<th class="sorting" tabindex="0" aria-controls="dataTable"
+													rowspan="1" colspan="1" style="width: 30px;">권한</th>
+												<th class="sorting" tabindex="0" aria-controls="dataTable"
+													rowspan="1" colspan="1" style="width: 40px;">이메일</th>
+												<th class="sorting" tabindex="0" aria-controls="dataTable"
+													rowspan="1" colspan="1" style="width: 90px;">담당 업무</th>
+												<th class="sorting" tabindex="0" aria-controls="dataTable"
+													rowspan="1" colspan="1" style="width: 50px;">휴대전화</th>
+												<th class="sorting" tabindex="0" aria-controls="dataTable"
+													rowspan="1" colspan="1" style="width: 50px;">권한 변경</th>
+												<th class="sorting" tabindex="0" aria-controls="dataTable"
+													rowspan="1" colspan="1" style="width: 50px;">탈퇴</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr class="odd" th:each="l:${list}">
+												<td style="text-align: center;">
+												<img th:src="@{/savedImg/}+${l.memb_ogfile}"
+													onerror="this.src='../../img/profile.png'" class="rounded" height="50" width="50"></td>
+												<td><a th:text=${l.memb_name}
+													class="newTask" th:id=${l.memb_mail} data-toggle="modal"
+													data-target="exampleModal"
+													onclick="openModal(this.getAttribute('id'))"
+													style="cursor: pointer; line-height: 50px; "></a></td>
+												<td th:text=${l.pjmb_right} style="line-height: 50px;"></td>
+												<td th:text=${l.memb_mail} id="memb_mail" name="memb_mail"  style="line-height: 50px;"></td>
+												<td th:text=${l.memb_work}  style="line-height: 50px;"></td>
+												<td th:text=${l.memb_phone} style="line-height: 50px;"></td>
+												<td  style="line-height: 50px;"><input class="btn btn-outline-primary"
+													type="button" value="Member" th:Memail="${l.memb_mail}"
+													th:onclick="editMembRight(this.getAttribute('Memail'))">
+													<input class="btn btn-outline-success" type="button"
+													value="PM" th:PMemail="${l.memb_mail}"
+													th:onclick="editPMRight(this.getAttribute('PMemail'))">
+												</td>
+												<td>
+												<a class="btn btn-danger btn-circle" type="button"
+													th:email="${l.memb_mail}"
+													th:onclick="deleteMember(this.getAttribute('email'))">
+													<i class="fa fa-user-minus"></i>
+												</a></td>
+											</tr>
+										</tbody>
+									</table>
+
+								</form>
+							</div>
+						</div>
+						<div class="navigator">
+							<a class="btn btn-primary"
+								th:href="|javascript:pagingFormSubmit(${navi.currentPage - 1})|">Previous</a>
+
+							<span
+								th:each="counter : ${#numbers.sequence(navi.startPageGroup, navi.endPageGroup)}">
+								<th:block th:if="${counter == navi.currentPage}">
+									<b>
+								</th:block> <a class="btn btn-light" th:text="${counter}"
+								th:href="|javascript:pagingFormSubmit(${counter})|"></a>&nbsp; <th:block
+									th:if="${counter == navi.currentPage}">
+									</b>
+								</th:block>
+							</span> <a class="btn btn-primary"
+								th:href="|javascript:pagingFormSubmit(${navi.currentPage + 1})|">Next</a>
+							<br> <br>
+
+						</div>
+
+					</div>
+				</div>
+
+			</div>
+
+			<!-- footer 시작 -->
+			<th:block th:replace="fragmentsManager/footer :: footerFragment"></th:block>
+			<!-- footer 끝 -->
+		</div>
+	</div>
+
+	<!-- 태스크 추가 modal -->
+
+	<div class="modal fade modal-signin" id="exampleModal" tabindex="-1"
+		aria-labelledby="exampleModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-ml" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3 class="modal-title fw-bold mb-0" id="exampleModalLabel">멤버정보</h3>
+				</div>
+
+				<div class="container mt-4 mb-4 p-3 d-flex justify-content-center">
+				
+				
+	<!-- 			<div class="top-container">
+			
+			<img src="https://i.imgur.com/G1pXs7D.jpg" class="img-fluid profile-image" width="70">
+			
+			<div class="ml-3">
+				<h5 class="name">Clarke Jeffery</h5>
+				<p class="mail">clark@zmail.com</p>
+			</div>
+		</div> -->
+				
+				<div class=" image d-flex flex-column justify-content-center align-items-center">
+						
+							<div id="insertImg"></div>
+						
+						<h5 class="name mt-3" id="modalMembName"></h5> 
+						 <p class="idd" id="modalMembMail"></p> 
+						 	<div
+							class="d-flex flex-row justify-content-center align-items-center gap-2">
+							<h6>연락처</h6>&nbsp;&nbsp;<strong class="idd" id="modalMembPhone"></strong>
+							</div>
+						<div
+							class="d-flex flex-row justify-content-center align-items-center gap-2" style="margin-top: 10px">
+							<h6>&nbsp;권한</h6>&nbsp;&nbsp;<strong class="idd1" id="modalMembRolename"></strong>
+						</div>
+						<div
+							class="d-flex flex-row justify-content-center align-items-center mt-3">
+							<h6>담당업무</h6>&nbsp;&nbsp;
+							<strong class="number" id="modalMembWork"> </strong>
+						</div>
+					</div>
+				</div>
+				
+				
+				
+				
+				
+					<!-- <div class=" image d-flex flex-column justify-content-center align-items-center">
+						<button class="btn btn-secondary"
+							style="height: 160px; width: 150px;">
+							<div id="insertImg"></div>
+						</button>
+						<span class="name mt-3" id="modalMembName"></span> 
+						 <span
+							class="idd" id="modalMembMail"></span> <span class="idd"
+							id="modalMembPhone"></span>
+						<div
+							class="d-flex flex-row justify-content-center align-items-center gap-2">
+							<span class="idd1" id="modalMembRolename"></span>
+						</div>
+						<div
+							class="d-flex flex-row justify-content-center align-items-center mt-3">
+							<span class="number" id="modalMembWork"> </span>
+						</div>
+					</div>
+				</div> -->
+
+				<div class="modal-footer">
+					<button type="button" id="closeNewTask" class="btn btn-secondary"
+						data-bs-dismiss="modal">확인</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+
+	<script>
+	function showPop() {
+
+        console.log('showPop 실행');
+
+        window.open("multiRoom/chatHome", "메신저",
+              "width=500, height=700, top=10, left=10");
+     }
+	
+		function deleteMember(Memail) {
+			let email = document.getElementById('email');
+			let form = document.getElementById('deleteForm');
+
+			/* if (confirm('탈퇴 시키겠습니까?')) {
+				email.value = Memail;
+				form.submit();
+			} */
+			
+			const swalWithBootstrapButtons = Swal.mixin({
+				  customClass: {
+				    confirmButton: 'btn btn-success',
+				    cancelButton: 'btn btn-danger'
+				  },
+				  buttonsStyling: false
+				})
+
+				swalWithBootstrapButtons.fire({
+				  title: '해당 회원을 탈퇴 합니까??',
+				  icon: 'warning',
+				  showCancelButton: true,
+				  confirmButtonText: '탈퇴 시킵니다!',
+				  cancelButtonText: '아니오,취소합니다!',
+				  reverseButtons: true
+				}).then((result) => {
+				  if (result.isConfirmed) {
+					  email.value = Memail;
+						form.submit();
+				    swalWithBootstrapButtons.fire(
+				      '탈퇴 되었습니다!',
+				      '해당 멤버의 데이터가 삭제되었습니다.',
+				      'success'
+				    )
+				  } else if (
+				    /* Read more about handling dismissals below */
+				    result.dismiss === Swal.DismissReason.cancel
+				  ) {
+				    swalWithBootstrapButtons.fire(
+				      '취소 되었습니다.',
+				      '해당 멤버의 데이터가 변경없이 저장되었습니다 :)',
+				      'error'
+				    )
+				  }
+				})
+		}
+		function editPMRight(Memail) {
+			let email = document.getElementById('PMemail');
+			let form = document.getElementById('editPMRightForm');
+			
+			/* if (confirm('PM으로 변경하시겠습니까?')) {
+				email.value = Memail;
+				form.submit();
+			} */
+			
+			const swalWithBootstrapButtons = Swal.mixin({
+				  customClass: {
+				    confirmButton: 'btn btn-success',
+				    cancelButton: 'btn btn-danger'
+				  },
+				  buttonsStyling: false
+				})
+
+				swalWithBootstrapButtons.fire({
+				  title: '"PM"으로 변경합니까??',
+				  icon: 'question',
+				  showCancelButton: true,
+				  confirmButtonText: '네,변경합니다!',
+				  cancelButtonText: '아니오,취소합니다!',
+				  reverseButtons: true
+				}).then((result) => {
+				  if (result.isConfirmed) {
+					  email.value = Memail;
+						form.submit();
+				    swalWithBootstrapButtons.fire(
+				      '"PM"으로 변경 되었습니다!',
+				    )
+				  } else if (
+				    /* Read more about handling dismissals below */
+				    result.dismiss === Swal.DismissReason.cancel
+				  ) {
+				    swalWithBootstrapButtons.fire(
+				      '취소 되었습니다.',
+				      '해당 멤버의 데이터가 변경없이 저장되었습니다 :)',
+				    )
+				  }
+				})
+			
+			
+			
+		}
+		function editMembRight(Memail) {
+			let email = document.getElementById('Memail');
+			let form = document.getElementById('editMembRightForm');
+			
+		/* 	if (confirm('Member로 변경하시겠습니까?')) {
+				email.value = Memail;
+				form.submit();
+			} */
+			
+			const swalWithBootstrapButtons = Swal.mixin({
+				  customClass: {
+				    confirmButton: 'btn btn-success',
+				    cancelButton: 'btn btn-danger'
+				  },
+				  buttonsStyling: false
+				})
+
+				swalWithBootstrapButtons.fire({
+				  title: '"Member"로 변경합니까??',
+				  icon: 'question',
+				  showCancelButton: true,
+				  confirmButtonText: '네,변경합니다!',
+				  cancelButtonText: '아니오,취소합니다!',
+				  reverseButtons: true
+				}).then((result) => {
+				  if (result.isConfirmed) {
+					  email.value = Memail;
+						form.submit();
+				    swalWithBootstrapButtons.fire(
+				      '"Member"로 변경 되었습니다!',
+				    )
+				  } else if (
+				    /* Read more about handling dismissals below */
+				    result.dismiss === Swal.DismissReason.cancel
+				  ) {
+				    swalWithBootstrapButtons.fire(
+				      '취소 되었습니다.',
+				      '해당 멤버의 데이터가 변경없이 저장되었습니다 :)',
+				    )
+				  }
+				})
+
+			
+			
+		}
+
+		function pagingFormSubmit(currentPage) {
+			var form = document.getElementById('pagingForm');
+			var page = document.getElementById('page');
+			page.value = currentPage;
+			form.submit();
+		}
+
+		//멤버 정보 팝업
+		/* function memberInfoOpen(Memail){
+		
+		 window.open('ShowMemberInfo?email=' + Memail, 'newWin',
+		 'left=400,top=200,width=500,height=900,menubar=no');
+		
+		 } */
+
+		//새로운 태스크 모달창 제어
+  		function openModal(id) {
+			 let email = id;
+			 
+			 $.ajax({
+					url : "ShowMemberInfo",
+					type : "POST",
+					data : {
+						memEmail : email,
+					},
+					dataType : 'json',
+					success : function(resultMap) {
+							console.log(resultMap);
+							console.log("resultMap.profileImg : " + resultMap.profileImg);
+							let insertImg = document.getElementById("insertImg");
+							
+							insertImg.innerHTML = '<img src="'+ resultMap.profileImg +'" class="rounded" height="140" width="130" />';
+							
+							$('#modalMembMail').text(resultMap.membersList.memb_mail);
+							$('#modalMembName').text(resultMap.membersList.memb_name);
+							$('#modalMembPhone').text(resultMap.membersList.memb_phone);
+							$('#modalMembRolename').text(resultMap.membersList.pjmb_right);
+							$('#modalMembWork').text(resultMap.membersList.memb_work);
+							
+						 	$("#exampleModal").modal("show");
+					},
+					error: function(e){
+						alert(JSON.stringify(e));
+					}
+				});
+			 
+		
+		} 
+ 
+		
+		/* $(".newTask").click(function(e) {
+		 let email = document.getElementById('showEmail');
+		 
+		 email.value = $("#memb_mail").val();	
+		 alert(email.value);
+		 $("#memberInfoForm").submit();	
+		 e.preventDefault();
+		 $("#exampleModal").modal("show");
+		 });  */
+
+		$("#closeNewTask").click(function(e) {
+			e.preventDefault();
+			$("#exampleModal").modal("hide");
+		})
+	</script>
+
+	<!-- JavaScript Bundle with Popper -->
+	<script
+		src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js"
+		integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8"
+		crossorigin="anonymous"></script>
+
+	<script
+		src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.slim.min.js"></script>
+	<script
+		src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+	<script
+		src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"></script>
+	<script th:src="@{/js/jquery-3.6.0.min.js}"></script>
+	<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</body>
+</html>

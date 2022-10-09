@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head th:replace="fragments/config :: configFragment">
+<meta charset="UTF-8">
+<title>issho - 공지사항</title>
+</head>
+
+<body>
+<!-- 홍상혁 : 페이징을 위한 자바 스크립트-->
+<script th:src="@{/js/readNotice.js}"></script>
+	<div id="wrapper">
+		<!-- content 시작 -->
+		<th:block th:replace="fragments/sidebar :: sidebar"></th:block>
+		<!-- content 끝 -->
+
+		<div id="content-wrapper" class="d-flex flex-column">
+			<!-- header 시작 -->
+			<th:block th:replace="fragments/header :: navFragment"></th:block>
+			<!-- header 끝 -->
+			
+			<!-- [SHHONG] 시작 -->
+
+<!-- 			
+			<div th:insert="/noticeView/modalFragment :: noticeDeleteFrag"></div>
+			<div th:insert="/noticeView/modalFragment :: changeCommentFrag"></div>
+-->
+	 			<div class="container">
+						
+					<h2>공지사항</h2>
+					<h5 class="mb-3">공지사항의 정보 및 댓글입니다</h5>            
+					
+			
+				<div id="accordion" class="col-lg-12 mb-0">
+				  <div class="card mb-0" >
+				  
+					<!-- Collapse 시작 -->
+					  <div class="card-header  bg-orange" id="headingOne" style="background-color:rgb(255, 249, 227)">
+					      <h3 class="mb-0">
+					        <button class="btn" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" >
+					         	<h4 th:text="${noticeDetail.notice_name}"> 공지사항제목 입니다.</h4>
+					      	</button>
+					      </h3>
+					      <div class="d-flex justify-content-around p-0">
+				        	<div class="d-flex align-items-center"><i class="fas fa-user mr-2"></i><span class="text-sm-left" th:text="${noticeDetail.memb_name}">홍길동</span></div>
+				        	<div class="d-flex align-items-center"><i class="fas fa-clock mr-2"></i><span th:text="${noticeDetail.notice_date}">2022.09.15 15:03:00</span></div>
+				        	<div class="d-flex align-items-center"><i class="fas fa-hand-point-down mr-2"></i><span th:text="${noticeDetail.notice_hits}">조회수: 123</span> </div>
+							
+<!--  나중에 데이터 정비되면 바꾸어야 됨	-->						
+							<div th:if="${#authentication.name} == ${noticeDetail.notice_writer}">
+								<div>
+									<a class="btn btn-sm bg-gradient-primary text-white" th:href="@{./updateNotice(notice_seq=${noticeDetail.notice_seq})}"><i class="fas fa-pen"></i></a>
+	 								<a class="btn btn-sm bg-gradient-primary text-white" th:href="|javascript:deleteNotice(${noticeDetail.notice_seq})|"><i class="fas fa-trash-alt"></i></a>		
+ <!--									<a class="btn btn-sm bg-gradient-primary text-white" data-toggle="modal" data-target="#deleteNoticeModal">　삭제　</a> -->
+								</div>
+							  </div>
+						  </div>
+					  </div>
+					  <!-- Collapse 끝 -->
+					  
+					    <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+					     	<div class="card-body" th:text="${noticeDetail.notice_contents}" id="notice_contents">
+									공지사항 내용입니다.
+					     	</div>
+      					  	<div class="card-body" th:if="${noticeDetail.notice_ogFilr}">
+								<strong><i class="fas fa-file-alt btn"></i><a th:href="@{./fileDownload(notice_seq=${noticeDetail.notice_seq})}" th:text="${noticeDetail.notice_ogFilr}">첨부 파일입니다</a></strong>	
+<!-- [09/28 11:00]								<strong><a th:href="@{/notice/fileDownload(notice_seq=${noticeDetail.notice_seq})}" th:text="'● 첨부파일: '+ ${noticeDetail.notice_ogFilr}">첨부 파일입니다</a></strong>	-->
+			      	  		</div>
+					    </div>
+					</div>			  
+	
+					<br><br>		
+					<!-- 댓글 입력 폼 -->
+					<div class="mb-3" id="toggleArea">
+						<form id="CommentForm" th:action="@{readNotice}" method="get" onsubmit="return writeORupdate();">
+							<div style="display:inline" class="d-flex align-items-bottom" >
+								<input type="hidden" name="notice_seq" id="notice_seq" th:value="${noticeDetail.notice_seq}"/>
+								<input type="hidden" name="noticeCmt_seq" id="noticeCmt_seq"/>
+								<textarea rows="5" class="col-lg-10" id="noticeCmt_contents" name="noticeCmt_contents" placeholder="댓글을 입력하세요"></textarea>
+								<div class="d-flex flex-column">
+									<input type="submit" id="submitComment" class="btn btn-primary bg-gradient-primary ml-3 my-1" value="댓글저장"/> 	
+									<input type="reset" id="resetComment" class="btn btn-primary bg-gradient-primary ml-3 mt-1 my-1" value=" 초 기 화 "/> 	
+									<input type="button" id="hideWriteForm" class="btn btn-primary bg-gradient-primary ml-3 mt-1 my-1" onclick="showWriteForm(0)" value="작성취소"/> 	
+								</div>
+							</div>
+						</form>
+					</div>
+					<div class="d-flex m-0 mb-2 mx-3 p-0 justify-content-between align-items-bottom">
+						<div class="mb-0 mt-3" id="totalCount"><b> 코멘트 갯수 :　<span class="text-primary" th:text="${#arrays.length(commentList)} + ' 개'"></span></b></div>
+						<input type="button" id="submitComment" class="btn btn-primary bg-gradient-primary ml-3" onclick="showWriteForm(1)" value="댓글작성"/> 	
+	 				</div>
+	 				
+				    <!-- 댓글 시작 -->
+					<th:block th:if="${commentList}">
+							<div th:each="commentDetail:${commentList}" class="m-0 p-0 bg-white" style="border-bottom: 1px solid rgb(192, 192, 192); border-top: 1px solid rgb(192, 192, 192); ">
+								<p th:text="${commentDetail.noticeCmt_contents}" th:id="'contents_' + ${commentDetail.noticeCmt_seq}" class="noticeCmt_contents mx-2 my-2 p-0">댓글입니다.</p>
+
+						        <div class="d-flex m-0 mb-2 mx-3 p-0 justify-content-between">
+       								<th:block th:if="${#authentication.name} == ${commentDetail.noticeCmt_writer}">
+										<div class="m-0 p-0"><i class="text-primary fas fa-user mr-2"></i><b><span class="text-primary" th:text="${commentDetail.memb_name}" >홍길동</span></b></div>
+										<div class="m-0 p-0"><i class="text-primary fas fa-clock mr-2"></i><b><span class="text-primary" th:text="${commentDetail.noticeCmt_date}" >2022.09.15 15:03:00</span></b></div>
+									</th:block>
+									<th:block th:unless="${#authentication.name} == ${commentDetail.noticeCmt_writer}">
+										<div class="m-0 p-0"><i class="fas fa-user mr-2"></i><span th:text="${commentDetail.memb_name}" >홍길동</span></div>
+										<div class="m-0 p-0"><i class="fas fa-clock mr-2"></i><span th:text="${commentDetail.noticeCmt_date}" >2022.09.15 15:03:00</span> </div>
+									</th:block>
+
+									<div class="m-0 p-0">
+										<div th:if="${#authentication.name} == ${commentDetail.noticeCmt_writer}">
+											<a class="btn-sm bg-gradient-primary text-white" th:onclick="'changeMode(' + ${commentDetail.noticeCmt_seq} + ');'"><i class="fas fa-pen"></i></a>							
+											<a class="btn-sm bg-gradient-primary text-white" th:href="@{readNotice(notice_seq= ${commentDetail.notice_seq})}" th:onclick="'return deleteComment('+${commentDetail.noticeCmt_seq} +');'"><i class="fas fa-trash-alt"></i></a>
+										</div>
+									 </div>
+									</div>
+								</div>
+						</th:block>
+					</div>
+						<br><br>			
+			
+			<!-- Content-Fluid 끝 -->
+			</div>
+
+			<!-- [SHHONG] 표 끝 -->
+			
+			<!-- footer 시작 -->
+			<th:block th:replace="fragments/footer :: footerFragment"></th:block>
+			<!-- footer 끝 -->
+		</div>
+	</div>
+
+</body>
+</html>

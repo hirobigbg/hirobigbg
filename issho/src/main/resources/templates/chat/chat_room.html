@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<th:block th:replace="fragments/config :: head"></th:block>
+<meta charset="UTF-8">
+<style>
+#chatName {
+	height: 70px;
+	padding: 10px;
+}
+
+#confirm {
+	float: right;
+}
+
+.leftBubble:after {
+	content: " ";
+	position: absolute;
+	top: 50%;
+	left: 100%; /* To the right of the tooltip */
+	margin-top: -5px;
+	border-width: 5px;
+	border-style: solid;
+	border-color: transparent transparent transparent #4e73df;
+}
+
+#memModal {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.profileBox {
+	width: 25px;
+	height: 25px;
+	border-radius: 70px;
+	overflow: hidden;
+	float: left;
+	position: relative;
+}
+
+.profilePic {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	position: absolute;
+	top: 0;
+	left: 0;
+	margin: 0;
+	padding: 0;
+}
+
+#memListDiv {
+	float: right;
+	margin-left: 210px;
+}
+
+ul#memList li.mem-item {
+	padding: 4px 8px 5px;
+	background-color: #4CD3E3;
+	color: white;
+	border-radius: 30px;
+	margin: 10px 5px 0 0;
+	display: inline-block;
+	font-size: 14px;
+	letter-spacing: -.5px;
+}
+
+ul#memList li.mem-item:hover {
+	background-color: white;
+	color: #4CD3E3;
+	border: 1px solid #4CD3E3;
+}
+
+.rightBubble {
+	background-color: #4e73df;
+	padding: 10px;
+	margin-left: 350px;
+	margin-bottom: 10px;
+	border-radius: 10px;
+	display: inline-block;
+	color: white;
+	margin-bottom: 10px;
+}
+
+.leftBubble {
+	background-color: #ffffff;
+	padding: 10px;
+	border-radius: 10px;
+	display: inline-block;
+}
+
+.profileBox {
+	width: 40px;
+	height: 40px;
+	border-radius: 70px;
+	overflow: hidden;
+	float: left;
+	position: relative;
+}
+
+.profilePic {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	position: absolute;
+	top: 0;
+	left: 0;
+	margin: 0;
+	padding: 0;
+}
+
+/*popup*/
+.popup_layer {
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 10000;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.4);
+}
+/*팝업 박스*/
+.popup_box {
+	position: relative;
+	top: 50%;
+	left: 50%;
+	overflow: none;
+	height: 600px;
+	width: 375px;
+	transform: translate(-50%, -50%);
+	z-index: 1002;
+	box-sizing: border-box;
+	background: #fff;
+	box-shadow: 2px 5px 10px 0px rgba(0, 0, 0, 0.35);
+	-webkit-box-shadow: 2px 5px 10px 0px rgba(0, 0, 0, 0.35);
+	-moz-box-shadow: 2px 5px 10px 0px rgba(0, 0, 0, 0.35);
+}
+/*컨텐츠 영역*/
+.popup_box .popup_cont {
+	padding: 50px;
+	line-height: 1.4rem;
+	font-size: 14px;
+}
+
+.popup_box .popup_cont h2 {
+	padding: 15px 0;
+	color: #333;
+	margin: 0;
+}
+
+.popup_box .popup_cont p {
+	border-top: 1px solid #666;
+	padding-top: 30px;
+}
+/*버튼영역*/
+.popup_box .popup_btn {
+	display: table;
+	table-layout: fixed;
+	width: 100%;
+	height: 70px;
+	background: #ECECEC;
+	word-break: break-word;
+}
+
+.popup_box .popup_btn a {
+	position: relative;
+	display: table-cell;
+	height: 70px;
+	font-size: 17px;
+	text-align: center;
+	vertical-align: middle;
+	text-decoration: none;
+	background: #ECECEC;
+}
+
+.popup_box .popup_btn a:before {
+	content: '';
+	display: block;
+	position: absolute;
+	top: 26px;
+	right: 29px;
+	width: 1px;
+	height: 21px;
+	background: #fff;
+	-moz-transform: rotate(-45deg);
+	-webkit-transform: rotate(-45deg);
+	-ms-transform: rotate(-45deg);
+	-o-transform: rotate(-45deg);
+	transform: rotate(-45deg);
+}
+
+.popup_box .popup_btn a:after {
+	content: '';
+	display: block;
+	position: absolute;
+	top: 26px;
+	right: 29px;
+	width: 1px;
+	height: 21px;
+	background: #fff;
+	-moz-transform: rotate(45deg);
+	-webkit-transform: rotate(45deg);
+	-ms-transform: rotate(45deg);
+	-o-transform: rotate(45deg);
+	transform: rotate(45deg);
+}
+
+.popup_box .popup_btn a.close_day {
+	background: #5d5d5d;
+}
+
+.popup_box .popup_btn a.close_day:before, .popup_box .popup_btn a.close_day:after
+	{
+	display: none;
+}
+/*오버레이 뒷배경*/
+.popup_overlay {
+	position: fixed;
+	top: 0px;
+	right: 0;
+	left: 0;
+	bottom: 0;
+	z-index: 1001;;
+	background: rgba(0, 0, 0, 0.5);
+}
+/*popup*/
+</style>
+<title>Insert title here</title>
+<script th:src="@{/js/sockjs.min.js}"></script>
+<script>
+$(document).ready(function() {
+    $(".dropdown-toggle").dropdown();
+});
+</script>
+<script th:inline="javascript">
+
+	let roomId = [[${roomId}]];
+	let sock = new SockJS("../../ws/multiRoom");
+	let membId = [[${id}]];
+
+	console.log(sock);
+	console.log(roomId);																																																																																																																																
+	
+	//onopen 함수는 페이지가 로드되면 자동실행됨
+	sock.onopen = function() {
+		console.log('onopen 실행됨');
+		sock.send(JSON.stringify({
+			chatRoomId : roomId,
+			type : "JOIN"
+		}));
+	}
+	
+	//onmessage 함수는 메시지가 오면 자동실행됨												
+	sock.onmessage = function(e) {
+		
+		console.log("onmsg 실행");
+		
+		console.log("onmsg roomId :" + roomId);
+		
+		//가지고 온 객체를 json 파싱해줌
+		var content = JSON.parse(e.data);
+		
+		//sender : 보낸 사람, message : 메시지, type : 타입
+		let sender = content.sender;
+		var message = content.message;
+		var type = content.type;
+		
+		//var chatLog = document.getElementById("chatLog");
+		if (type == "SEND"){
+			
+			//내가 보낸 메시지일 때
+			if(sender == membId){
+				//메시지 동적으로 뿌려주기
+				appendMyMessage(sender, message);
+				
+				//ajax 호출하여 db에 저장
+				$.ajax({
+					url : "multiRoom/insertMsg",
+					type : "POST",
+					data : {
+						chatroom_seq : roomId,
+						chatmsg_content : message,
+						chatmsg_recipient : sender
+					},
+					dataType : 'json',
+					success : function(result) {
+						console.log('DB 삽입 완료');
+					}
+				});
+				
+			} else {
+				//타인이 보낸 메시지일 때
+				//메시지 동적으로 뿌려주기
+				appendOtherMessage(sender, message);
+			}
+		}
+	}
+	
+	//send 함수
+	function send() {
+
+		console.log("send 실행");
+		var textarea = document.getElementById("textarea");
+		var myMessage = textarea.value;
+		
+		console.log("myMessage : " + myMessage);
+		
+		console.log(membId);
+		
+		sock.send(JSON.stringify({
+			chatRoomId : roomId,
+			type : "SEND",
+			message : myMessage,
+			sender : membId
+		}));
+	}
+	
+	//내가 보낸 메시지 동적 처리
+	function appendMyMessage(sender, msg) {
+	
+		console.log("myMsg 함수 sender : " + sender);
+		
+			if (msg == '') {
+				return false;
+			} else {
+			
+				//var t = getTimeStamp();
+				$("#chatLog")
+						.append(
+								"<div class='rightBubble'>"
+										+ msg
+										+ "</div>")
+										//+ t + "</span></div></div></div>")
+
+				var chatAreaHeight = $("#chatArea").height();
+				var maxScroll = $("#chatLog").height() - chatAreaHeight;
+				$("#chatArea").scrollTop(maxScroll);
+
+			}
+		}
+	
+	//남이 보낸 메시지 동적 처리
+	function appendOtherMessage(sender, msg) {
+
+		console.log("otherMsg 함수 sender : " + sender);
+		console.log(msg.includes('참가'));
+		
+		if (msg == '') {
+			return false;
+		} else {
+			
+			$.ajax({
+
+				url : "../../member/memSearchObject",
+				type : "POST",
+				data : {
+					memb_mail : sender
+				},
+				success : function(result) {
+
+					console.log(result.memb_name);
+					console.log(result.memb_ogfile);
+					
+					let log = `'this.src='../../img/profile.png''`;
+					
+					$("#chatLog")
+					.append("<div><div class='profileBox'><img class='profilePic' th:src='@{/savedImg/}"+ result.memb_ogfile + "'onerror="+ log +"'></div><div><h6 style='color: black;'>" + result.memb_name + "</h6></div></div><div><div class='leftBubble'>"+ msg + "</div><h6 th:text=" +  + "style='font-size: 10px; display: inline-block'></h6></div>")
+									
+					var chatAreaHeight = $("#chatArea").height();
+					var maxScroll = $("#chatLog").height() - chatAreaHeight;
+					$("#chatArea").scrollTop(maxScroll);
+				}
+			});
+		}
+	}
+	
+	//멤버 목록 모달
+	function openMemModal(){
+		
+		console.log('openMemModal');
+		
+		$("#memModal").modal("show");
+	}
+	
+	
+	//채팅방 퇴장
+	function confirmLeave(){
+		
+		console.log('leave 실행');
+		
+		let leave;
+		leave = confirm('채팅방을 나가시겠습니까?');
+	
+		if(leave){
+			
+			$.ajax({
+				url : "leaveChat",
+				type : "POST",
+				data : {
+					chatroom_seq : roomId,
+					chatmember : membId
+				},
+				success : function(){
+					window.opener.location.reload();
+					window.close();
+				}
+			});
+		}else{
+			return false;
+		}
+	}	
+	
+	//팝업 띄우기
+	function openPop() {
+		
+		console.log('실행됨');
+		
+	    document.getElementById("popup_layer").style.display = "block";
+
+	}
+
+	//팝업 닫기
+	function closePop() {
+	    document.getElementById("popup_layer").style.display = "none";
+	}
+	$("#memSearch").keyup(function() {
+
+		let val = $(this).val();
+
+		if (val.match("@")) {
+			$.ajax({
+				url : "member/memSearch",
+				type : "POST",
+				data : {
+
+				},
+				dataType : 'json',
+				success : function(result) {
+
+				}
+			});
+		}
+
+	});
+
+	function appendMem(id) {
+
+		/*$("#staffNotice").hide();*/
+
+		console.log('appendMem 실행됨' + id);
+
+		var list = document.querySelectorAll('li.mem-item');
+
+		let memLists = new Array();
+
+		for (var i = 0; i < list.length; i++) {
+			memLists[i] = list[i].id;
+		}
+
+		var li = $("#memList2").val();
+
+		if (memLists.includes(id)) {
+
+			alert('이미 추가된 멤버입니다.');
+
+		} else {
+
+			li += id + ",";
+
+			$("#memList2").val(li);
+
+			$
+					.ajax({
+
+						url : "../../member/memSearch",
+						type : "POST",
+						data : {
+							memb_mail : id
+						},
+						success : function(result) {
+
+							console.log(result);
+
+							$("#memList")
+									.append(
+											"<li class='mem-item' id= "+ id +  ">"
+													+ "<span>"
+													+ result
+													+ "</span>"
+													+ "<span class='del-btn' idx='" + id + "'>&nbsp;x</span></li>");
+						}
+					});
+		}
+	}
+
+	//x 누르면 없어짐.
+	$(document).on("click", ".del-btn", function(e) {
+		var index = $(this).attr("idx");
+		$(this).parent().remove();
+	});
+	
+	function sendNewMem(){
+		
+		console.log($("#memList").val());
+		console.log($("#memList").text());
+		
+		let name = $("#memList").text();
+		let trimName = name.trim();
+		console.log(trimName);
+		let name2 = trimName.substr(0,3);
+		console.log(name2);
+		
+		//폼 전송
+		$("#openNewMem").submit();
+		
+		//팝업 레이어 닫기
+		document.getElementById("popup_layer").style.display = "none";
+		
+		let msg = name2 +"님이 참가하셨습니다";
+		
+		console.log(msg);
+	}
+	
+</script>
+</head>
+<body>
+	<!-- 채팅방명 -->
+	<input type="hidden" id="roomId" value="${roomid}">
+
+	<!-- nav 시작 -->
+	<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+		<div class="container-fluid">
+			<a class="navbar-brand" href="#">[[${chatInfo.chatroom_name}]]</a>
+
+
+			<!-- 채팅방 멤버 리스트 -->
+			<div class="dropdown dropstart no-arrow mb-7" id="memListDiv">
+				<button class="btn btn-secondary btn-circle btn-sm dropdown-toggle"
+					type="button" id="dropdownMenuButton" data-toggle="dropdown"
+					aria-haspopup="true" aria-expanded="false">
+					<i class="fas fa-solid fa-user"></i>
+				</button>
+				<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+					<table style="color: black">
+						<tr th:each="chatMems : ${chatMems}">
+							<td>
+								<div class="profileBox">
+									<img class="profilePic"
+										th:src="@{/savedImg/}+${chatMems.memb_ogfile}"
+										onerror="this.src='../../img/profile.png'">
+								</div>
+							</td>
+							<td th:text="${chatMems.memb_name}"></td>
+						</tr>
+					</table>
+
+					<a class="dropdown-item" href="javascript:openPop()">멤버 초대</a>
+				</div>
+			</div>
+
+			<button class="btn btn-secondary btn-circle btn-sm" type="button"
+				id="confirm" onclick="confirmLeave();">
+				<i class="fas fa-solid fa-door-open"></i>
+			</button>
+
+		</div>
+	</nav>
+	<!-- nav 끝 -->
+
+
+	<!-- chat 시작 -->
+	<div>
+		<div
+			style="height: 560px; overflow: scroll; overflow-x: hidden; background-color: #f1f3f5"
+			id="chatArea">
+
+			<div th:each="msg : ${chatMsgs}">
+
+				<div class="other" th:if="${msg.chatmsg_recipient} != ${id}">
+					<div>
+						<div th:each="chatMems : ${chatMems}">
+							<div th:if="${msg.chatmsg_recipient} == ${chatMems.memb_mail}">
+								<div class="profileBox">
+									<img class="profilePic"
+										th:src="@{/savedImg/}+${chatMems.memb_ogfile}"
+										onerror="this.src='../../img/profile.png'">
+								</div>
+								<div>
+									<h6 style="color: black;">[[${chatMems.memb_name}]]</h6>
+								</div>
+
+							</div>
+						</div>
+
+					</div>
+					<div>
+						<div class="leftBubble">[[${msg.chatmsg_content}]]</div>
+						<h6 th:text="${msg.chatmsg_sendDate}"
+							style="font-size: 10px; display: inline-block"></h6>
+
+					</div>
+				</div>
+
+
+				<div class="main" th:if="${msg.chatmsg_recipient} == ${id}">
+					<div class="rightBubble">[[${msg.chatmsg_content}]]</div>
+					<div>
+						<h6 th:text="${msg.chatmsg_sendDate}"
+							style="font-size: 10px; float: right;"></h6>
+					</div>
+				</div>
+			</div>
+			<div id="chatLog" style="margin-top: 10px; margin-left: 10px;">
+
+			</div>
+		</div>
+	</div>
+
+	<!-- 메시지 입력창 -->
+	<div class="row d-flex justify-content-center text-center">
+		<textarea class="form-control"
+			style="height: 70px; float: left; width: 75%; border: none; margin: 5px; resize: none;"
+			placeholder="메시지를 입력해주세요" id="textarea"></textarea>
+		<button type="button" id="chatArea" class="btn btn-info btn-lg"
+			onclick="send()">전송</button>
+	</div>
+	<!-- chat 끝 -->
+
+
+	<!-- 멤버 추가 팝업 레이어 -->
+	<div class="popup_layer" id="popup_layer" style="display: none;">
+		<div class="popup_box">
+			<div style="height: 10px; width: 375px; float: top;">
+				<a href="javascript:closePop();"></a>
+			</div>
+			<!--팝업 컨텐츠 영역-->
+			<div class="popup_cont">
+				<div id="searchAjax" class="form-group">
+					<h5>멤버 초대</h5>
+
+					<form th:action="@{../multiRoom/openNewMem}" method="POST"
+						id="newChatMem">
+
+						<div id="mems">
+							<ul id="memList">
+							</ul>
+						</div>
+
+						<input type="text" id="memSearch"
+							class="form-control form-control-user"
+							placeholder="이름 또는 아이디로 검색해보세요!">
+
+						<div id="chatMem"
+							style="overflow: auto; width: 100%; height: 200px;">
+
+							<table class="table table-hover">
+								<tr th:each="pjMemList : ${pjMemList}"
+									th:id="${pjMemList.memb_mail}" th:name="${pjMemList.memb_name}"
+									onclick="appendMem(id);">
+									<td>
+										<div class="profileBox">
+											<img class="profilePic"
+												th:src="@{/savedImg/}+${pjMemList.memb_ogfile}"
+												onerror="this.src='../../img/profile.png'">
+										</div>
+									</td>
+									<td th:text="${pjMemList.memb_name}"></td>
+								</tr>
+							</table>
+
+						</div>
+
+						<div class="col text-center">
+							<button type="button" class="btn btn-primary"
+								onclick="sendNewMem();">멤버 추가</button>
+						</div>
+
+					</form>
+
+				</div>
+			</div>
+			<!--팝업 버튼 영역-->
+			<div class="popup_btn" style="float: bottom;">
+				<a href="javascript:closePop();">닫기</a>
+			</div>
+		</div>
+	</div>
+	<!-- 멤버 추가 팝업 레이어 끝-->
+</body>
+</html>

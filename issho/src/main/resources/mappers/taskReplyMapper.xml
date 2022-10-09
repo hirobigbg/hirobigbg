@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="net.softsociety.issho.task.dao.TaskReplyDAO">
+
+	<!-- 리플 목록 -->
+	<select id="listReply" parameterType="int"
+		resultType="taskReplyDetail">
+		SELECT
+		treply_seq
+		, task_seq
+		, treply_writer
+		, treply_content
+		, treply_ogFile
+		, treply_saveFile
+		, to_char(treply_inputdate, 'YYYY-MM-DD HH24:MI:SS') treply_inputdate
+		, memb_name
+		FROM
+		taskReply r, members m
+		WHERE
+		treply_writer = m.memb_mail
+		AND r.task_seq = #{task_seq}
+		ORDER by
+		treply_inputDate DESC
+	</select>
+
+	
+
+
+
+</mapper>

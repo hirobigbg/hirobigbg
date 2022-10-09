@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link rel="stylesheet" th:href="@{/css/sb-admin-2.min.css}">
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css" />
+<style>
+body {
+	font-family: Pretendard-Regular;
+}
+
+.headerDiv {
+	border: 3px solid blueviolet;
+}
+
+.btn-upload {
+	width: 150px;
+	height: 36px;
+	background: #fff;
+	margin-top: 5px;
+	border: 1px solid rgb(77, 77, 77);
+	border-radius: 15px;
+	font-weight: 500;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+#imgSection {
+	margin-left: 200px;
+}
+
+#deleteImgBtn {
+	height: 35px;
+	border-radius: 20px;
+}
+
+.btn-upload:hover {
+	background: rgb(77, 77, 77);
+	color: #fff;
+}
+
+#memb_ogfile {
+	display: none;
+}
+
+.box {
+	width: 100px;
+	height: 100px;
+	border-radius: 70%;
+	overflow: hidden;
+	text-align: center;
+}
+
+#preview {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	text-align: center;
+}
+</style>
+<!-- 컨텐츠페이지의 CSS 영역이 들어감 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 공통으로 쓰이는 js 파일을 넣는다.-->
+<script th:src="@{/js/jquery-3.6.0.min.js}"></script>
+<script th:src="@{/js/sb-admin-2.js}"></script>
+
+<!-- Bootstrap core JavaScript-->
+<script th:src="@{/vendor/jquery/jquery.min.js}"></script>
+<script th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+
+<!-- Core plugin JavaScript-->
+<script th:src="@{/vendor/jquery-easing/jquery.easing.min.js}"></script>
+
+<!-- 컨텐츠페이지의 스크립트 영역이 들어감 -->
+<th:block layout:fragment="script"></th:block>
+<script>
+	$(function() {
+		$("#sidebarToggle, #sidebarToggleTop").on('click', function(e) {
+			$("body").toggleClass("sidebar-toggled");
+			$(".sidebar").toggleClass("toggled");
+			if ($(".sidebar").hasClass("toggled")) {
+				$('.sidebar .collapse').collapse('hide');
+			}
+			;
+		});
+
+	})
+</script>
+</head>
+
+
+<body>
+<body class="bg-gradient-primary">
+	<div class="container">
+		<div class="card o-hidden border-0 shadow-lg my-5">
+			<div class="card-body p-3">
+				<!-- Nested Row within Card Body -->
+				<div class="row justify-content-center">
+					<div class="col-lg-7">
+						<div class="p-5">
+							<div class="text-center">
+								<h1 class="h4 text-gray-900 mb-4">회원가입</h1>
+							</div>
+							<form class="user" th:action="@{/member/join}" method="POST"
+								onsubmit="return formCheck();" enctype="multipart/form-data">
+								<div class="form-group justify-content-around" id="imgSection">
+									<div class="box">
+										<img id="preview" th:src="@{/img/profile.png}" />
+									</div>
+									<label for="memb_ogfile">
+										<div class="btn-upload">프로필 등록</div>
+									</label> <input type="file" id="memb_ogfile" name="upload"
+										onchange="readURL(this);">
+
+									<!-- 	 -->
+									<button type="button" onclick="deleteImg();"
+										class="btn btn-info" id="deleteImgBtn">X</button>
+								</div>
+
+								<div class="form-group my-3 row justify-content-around col">
+									<input type="email" class="form-control form-control-user w-75"
+										id="memb_mail" name="memb_mail" placeholder="이메일을 입력해주세요">
+									<button type="button"
+										class="btn btn-info btn-user btn-block w-25"
+										onclick="idCheck()">중복확인</button>
+									<div id="idVal"></div>
+								</div>
+
+								<div class="form-group">
+									<input type="text" class="form-control form-control-user"
+										id="memb_name" name="memb_name" placeholder="이름을 입력해주세요">
+									<div id="nameVal"></div>
+								</div>
+
+								<div class="form-group row">
+									<div class="col-sm-6 mb-3 mb-sm-0">
+										<input type="password" class="form-control form-control-user"
+											id="memb_pwd" name="memb_pwd" placeholder="비밀번호">
+									</div>
+									<div class="col-sm-6">
+										<input type="password" class="form-control form-control-user"
+											id="memb_pwd_repeat" placeholder="비밀번호 확인">
+									</div>
+									<div id="pwVal"></div>
+									<div id="pwVal2"></div>
+								</div>
+
+								<div class="form-group">
+									<input type="text" class="form-control form-control-user"
+										id="memb_phone" name="memb_phone"
+										placeholder="전화번호를 입력해주세요('-' 제외)">
+									<div id="phoneVal"></div>
+								</div>
+
+								<div class="form-group">
+									<textarea class="form-control" rows="3" style="resize: none;"
+										id="memb_work" name="memb_work" placeholder="주요 업무를 입력해주세요"></textarea>
+
+								</div>
+
+								<button type="submit" class="btn btn-primary btn-user btn-block">
+									등록</button>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+<script>
+	//모든 공백 체크 정규식
+	var empJ = /\s/g;
+	//아이디 정규식
+	var idJ = /^[a-z0-9][a-z0-9_\-]{4,19}$/;
+	// 비밀번호 정규식
+	var pwJ = /^[A-Za-z0-9]{8,16}$/;
+	// 이름 정규식
+	var nameJ = /^[가-힣]{2,4}|[a-zA-Z]{2,10}\s[a-zA-Z]{2,10}$/;
+	// 이메일 검사 정규식
+	var mailJ = /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/;
+	// 휴대폰 번호 정규식
+	var phoneJ = /^01([016789])([0-9]{3,4})([0-9]{4})$/;
+
+	var inval_Arr = new Array(5).fill(false);
+
+	//아이디 중복체크 [0]
+	function idCheck() {
+
+		let memb_mail = $("#memb_mail").val();
+
+		alert(memb_mail);
+
+		if (inval_Arr[1]) {
+			$.ajax({
+				url : "idCheck",
+				type : "POST",
+				data : {
+					memb_mail : memb_mail
+				},
+				dataType : 'json',
+				success : function(result) {
+					if (result == 0) {
+						$("#idVal").html("사용할 수 있는 아이디입니다.")
+						$("#idVal").attr('color', 'green');
+						inval_Arr[0] = true;
+					} else {
+						$("#idVal").html("사용할 수 없는 아이디입니다.")
+						$("#idVal").attr('color', 'red');
+						inval_Arr[0] = true;
+					}
+				}
+			});
+		} else {
+
+			$("#idVal").html("이메일 형식이 올바르지 않습니다.")
+		}
+
+	}
+
+	//이메일 확인 [1]
+	$("#memb_mail").keyup(function() {
+		if (mailJ.test($('#memb_mail').val())) {
+			$("#idVal").html("");
+			inval_Arr[1] = true;
+
+			if (inval_Arr[0] == false) {
+				$("#idVal").html("아이디 중복체크를 해주세요")
+			}
+		} else {
+			$("#idVal").html("이메일 형식이 올바르지 않습니다.")
+			inval_Arr[1] = false;
+		}
+	});
+
+	//이름 폼체크 [2]
+	$("#memb_name").keyup(function() {
+		if (nameJ.test($('#memb_name').val())) {
+			$("#nameVal").html("");
+			inval_Arr[2] = true;
+		} else {
+			$("#nameVal").html("이름 형식이 올바르지 않습니다.")
+			inval_Arr[2] = false;
+		}
+	});
+
+	//비밀번호 폼체크 [3]
+	$("#memb_pwd").keyup(function() {
+		if (pwJ.test($('#memb_pwd').val())) {
+			$("#pwVal").html("");
+			inval_Arr[3] = true;
+		} else {
+			$("#pwVal").html("비밀번호는 영문자와 숫자를 혼합하여 4~12자리로 입력해주세요.")
+			inval_Arr[3] = false;
+		}
+	});
+
+	//비밀번호 확인 [4]
+	$("#memb_pwd_repeat").keyup(function() {
+		if ($("#memb_pwd").val() != $("#memb_pwd_repeat").val()) {
+			console.log($("#memb_pwd").val());
+			console.log($("#memb_pwd_repeat").val());
+			$("#pwVal2").html("패스워드가 일치하지 않습니다.");
+			inval_Arr[4] = false;
+		} else {
+			inval_Arr[4] = true;
+			$("#pwVal2").html("");
+		}
+	});
+
+	//전화번호 확인 [5]
+	$("#memb_phone").keyup(function() {
+		if (pwJ.test($('#memb_phone').val())) {
+			$("#phoneVal").html("");
+			inval_Arr[5] = true;
+		} else {
+			$("#phoneVal").html("전화번호 형식이 올바르지 않습니다.")
+			inval_Arr[5] = false;
+		}
+	});
+
+	function formCheck() {
+
+		if (!inval_Arr[0]) {
+			alert('아이디 중복체크가 완료되지 않았습니다.');
+			return false;
+		} else if (!inval_Arr[1]) {
+			alert('올바른 이메일 형식이 아닙니다.');
+			return false;
+		} else if (!inval_Arr[2]) {
+			alert('올바른 이름 형식이 아닙니다.');
+			return false;
+		} else if (!inval_Arr[3]) {
+			alert('올바른 비밀번호 형식이 아닙니다.');
+			return false;
+		} else if (!inval_Arr[4]) {
+			alert('비밀번호가 일치하지 않습니다.');
+			return false;
+		} else if (!inval_Arr[5]) {
+			alert('올바른 전화번호 형식이 아닙니다.');
+			return false;
+		}
+
+		return true;
+
+	}
+
+	//이미지 미리보기
+
+	function readURL(input) {
+		if (input.files && input.files[0]) {
+			var reader = new FileReader();
+			reader.onload = function(e) {
+				document.getElementById('preview').src = e.target.result;
+			};
+			reader.readAsDataURL(input.files[0]);
+		} else {
+			document.getElementById('preview').src = "../img/profile.png";
+		}
+	}
+
+	//프로필 초기화
+	function deleteImg() {
+		console.log('실행');
+
+		$("#memb_ogfile").val("");
+		document.getElementById('preview').src = "../img/profile.png";
+	}
+</script>
+
+</html>

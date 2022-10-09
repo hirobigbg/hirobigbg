@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<th:block th:replace="fragments/config :: head"></th:block>
+<!-- bootstrap 4 -->
+<link rel="stylesheet"
+	href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<link rel="stylesheet"
+	href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script
+	src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+	
+<!-- gijgo datepicker library -->
+<script src="https://unpkg.com/gijgo@1.9.13/js/gijgo.min.js"
+	type="text/javascript"></script>
+<link href="https://unpkg.com/gijgo@1.9.13/css/gijgo.min.css"
+	rel="stylesheet" type="text/css" />
+<meta charset="UTF-8">
+<style>
+#basicSelection, #basicSelection2, #basicSelection3, #basicSelection4,
+	#basicSelection5 {
+	margin-right: 10px;
+}
+
+#staffNotice {
+	margin-left: 10px;
+}
+
+ul#memList li.mem-item {
+	padding: 4px 8px 5px;
+	background-color: #4CD3E3;
+	color: white;
+	border-radius: 30px;
+	margin: 10px 5px 0 0;
+	display: inline-block;
+	font-size: 14px;
+	letter-spacing: -.5px;
+}
+
+ul#memList li.mem-item:hover {
+	background-color: white;
+	color: #4CD3E3;
+	border: 1px solid #4CD3E3;
+}
+	#naviDiv {
+		margin: 0 auto;
+	}
+	
+	.taskCard {
+		width : 170%;
+	}
+	
+	.bookmarked {
+		color : yellow;
+	}
+</style>
+<script type="text/javascript" th:inline="javascript">
+	let page = [[${page}]];
+	let task_state = '';
+	let task_rank = '';
+	let bookmark = '';
+	
+	function pagingFormSubmit(currentPage) {
+		var searchWord = $('#searchWord').val();
+		page = currentPage;
+		selectTask();
+	}
+	
+	//신승훈 * 태스크 조건 검색
+	function selectTask(){
+		let obj = new Object();
+		if($('#task_sender_checkbox').is(':checked'))
+			obj.task_sender = 'task_sender';
+		if($('#task_staff_checkbox').is(':checked'))
+			obj.task_staff = 'task_staff';
+		
+		if($(this).attr('do')!=undefined){
+			if($(this).attr('do')==="task_state"){
+				task_state = "task_state";
+				task_rank = "";
+				bookmark = "";
+			}	
+			if($(this).attr('do')==="task_rank"){
+				task_state = "";
+				task_rank = "task_rank";
+				bookmark = "";
+			}
+				
+			if($(this).attr('do')==="bookmark"){
+				task_state = "";
+				task_rank = "";
+				bookmark = "bookmark";
+			}
+		}
+		
+		if(task_state != "")
+			obj.search_type = "task_state";
+		if(task_rank != "")
+			obj.search_type = "task_rank";
+		if(bookmark != "")
+			obj.search_type = "bookmark";
+		
+		obj.searchWord = $('#searchWord').val();
+		obj.page = page;
+		
+		$.ajax({
+			url: 'selectTask',
+			type: 'post',
+			data: obj,
+			dataType: 'JSON',
+			success: function(resultMap) {
+				page = resultMap.page;
+				console.log("resultMap"	);
+				console.log(resultMap);
+				createTaskList(resultMap.taskList);
+				createNavi(resultMap.navi);
+			},
+			error: function(err) {
+				console.log(JSON.stringify(err));
+				console.log(err.status);
+			}
+		});
+	}
+	
+	//신승훈 * 태스크 네비
+	function createNavi(navi) {
+		let naviHTML = '';
+		
+		//if(navi.currentGroup != 0)
+		//	naviHTML += `<li class="page-item"><a class="page-link" th:href="javascript:pagingFormSubmit(${navi.currentPage - navi.pagePerGroup})">◁◁</a></li>`;
+			
+		if(navi.currentPage > 1)
+			naviHTML += `<li class="page-item"><a class="page-link" href="javascript:pagingFormSubmit(${navi.currentPage - 1})">◀</a></li>`;
+		
+		for(let i=navi.startPageGroup ; i<=navi.endPageGroup ; i++){
+			if(page==i)
+				naviHTML += `<b>`;
+			naviHTML += `<li class="page-item"><a class="page-link" href="javascript:pagingFormSubmit(${i})">${i}</a></li>`;
+			if(page==i)
+				naviHTML += `</b>`;
+		}
+		
+		if(navi.currentPage != navi.totalPageCount)
+			naviHTML += `<li class="page-item"><a class="page-link" href="javascript:pagingFormSubmit(${navi.currentPage + 1})">▶</a></li>`;
+		
+		//if(navi.currentGroup != navi.endPageGroup)
+		//	naviHTML += `<li class="page-item"><a class="page-link" href="javascript:pagingFormSubmit(${navi.currentPage + navi.pagePerGroup})">▷▷</a></li>`;
+		
+		$('#naviDiv').html(naviHTML);
+	}
+	
+	//신승훈 * 태스크 리스트
+	function createTaskList(taskList) {
+		let taskHTML = '';
+		for(let task of taskList){
+			taskHTML += `
+				<div class="card shadow h-20 py-2 mt-3 taskCard">
+				<div class="card-body clickTask" taskSeq="${task.task_seq}">	
+					<div class="no-gutters align-items-center">
+						<div class="row mr-2">
+							<!-- 즐겨찾기 -->
+							<div class="col-1">`;
+							console.log(task.bookmark_memb_mail == [[${#authentication.name}]]);
+				if(task.bookmark_memb_mail != [[${#authentication.name}]])
+					taskHTML += `<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="currentColor" class="bi bi-star bookmarkicon" taskseq="${task.task_seq}" viewBox="0 0 16 16">
+									<path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z"/>
+								</svg>`;
+								
+				else 
+					taskHTML += `<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="currentColor" class="bi bi-star bookmarkicon bookmarked" taskseq="${task.task_seq}" viewBox="0 0 16 16">
+						<path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
+					</svg>`;
+								
+				taskHTML += `</div>
+							
+							<div class="col-5 row">
+								<div class="h5 col-12 font-weight-bold text-uppercase mb-1">
+									${task.task_name}
+								</div>
+								<div class="col-12 mb-0 font-weight-bold text-gray-800">
+									할당자 ${task.task_sender}
+								</div>
+							</div>
+							<div class="col-2">`;
+							
+				if(task.task_rank == 0)
+					taskHTML += '<div class="h5 mt-3 mb-0 font-weight-bold text-gray-800 text-warning">우선순위 : 낮음';
+				if(task.task_rank == 1)
+					taskHTML += '<div class="h5 mt-3 mb-0 font-weight-bold text-gray-800 text-primary">우선순위 : 보통';
+				if(task.task_rank == 2)
+					taskHTML += '<div class="h5 mt-3 mb-0 font-weight-bold text-gray-800 text-danger">우선순위 : 높음';
+				
+				//<!-- 신승훈 진행상태 변경 -->	
+				if(task.task_state == 0){
+					if(task.task_sender != [[${#authentication.name}]]){
+						taskHTML += `</div>
+								</div>
+							<div class="h5 mt-1 mb-2 font-weight-bold text-gray-800 btn btn-warning text-white" id="stateSeq_${task.task_seq}" taskseq="${task.task_seq}">`
+					}else{
+						taskHTML += `</div>
+								</div>
+							<div class="h5 mt-1 mb-2 font-weight-bold text-gray-800 btn btn-warning text-white stateChange" id="stateSeq_${task.task_seq}" taskseq="${task.task_seq}">`
+					}
+					taskHTML += '진행전';	
+				}	
+					
+				if(task.task_state == 1){
+					if(task.task_sender != [[${#authentication.name}]]){
+						taskHTML += `</div>
+								</div>
+							<div class="h5 mt-1 mb-2 font-weight-bold text-gray-800 btn btn-primary text-white" id="stateSeq_${task.task_seq}" taskseq="${task.task_seq}">`
+					}else{
+						taskHTML += `</div>
+								</div>
+							<div class="h5 mt-1 mb-2 font-weight-bold text-gray-800 btn btn-primary text-white stateChange" id="stateSeq_${task.task_seq}" taskseq="${task.task_seq}">`
+					}
+					taskHTML += '진행중';	
+				}
+					
+				if(task.task_state == 2){
+					if(task.task_sender != [[${#authentication.name}]]){
+						taskHTML += `</div>
+								</div>
+							<div class="h5 mt-1 mb-2 font-weight-bold text-gray-800 btn btn-success text-white" id="stateSeq_${task.task_seq}" taskseq="${task.task_seq}">`
+					}else{
+						taskHTML += `</div>
+								</div>
+							<div class="h5 mt-1 mb-2 font-weight-bold text-gray-800 btn btn-success text-white stateChange" id="stateSeq_${task.task_seq}" taskseq="${task.task_seq}">`
+					}
+					taskHTML += '완료';	
+				}
+				
+				if(task.task_state == 3){
+					if(task.task_sender != [[${#authentication.name}]]){
+						taskHTML += `</div>
+								</div>
+							<div class="h5 mt-1 mb-2 font-weight-bold text-gray-800 btn btn-secondary text-white" id="stateSeq_${task.task_seq}" taskseq="${task.task_seq}">`
+					}else{
+						taskHTML += `</div>
+								</div>
+							<div class="h5 mt-1 mb-2 font-weight-bold text-gray-800 btn btn-secondary text-white stateChange" id="stateSeq_${task.task_seq}" taskseq="${task.task_seq}">`
+					}
+					taskHTML += '보류';	
+				}
+				taskHTML += `</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			`;
+					
+		}
+		$('#taskListDiv').html(taskHTML);
+		
+		//신승훈 * 즐겨찾기 클릭시
+       	$(".bookmarkicon").click(bookmarkControlFunc); 
+		
+		//신승훈 * 상세보기 클릭시
+    	$(".clickTask").click(showTaskModalControlFunc); 
+		
+		//신승훈 * 진행도 클릭시
+    	$(".stateChange").click(stateControlFunc); 
+	}
+	
+	//신승훈 * 진행상태 변경
+	function stateControlFunc(event){
+		event.stopPropagation();
+	
+		$.ajax({
+   			url : 'stateChange',
+   			type : 'post',
+   			data : { task_seq: $(this).attr('taskseq') },
+   			dataType : "json",
+   			success : function(stateResult){
+   				console.log(stateResult);
+   				if(stateResult.task_state === "0"){
+   					$(`#stateSeq_${stateResult.task_seq}`).text("진행전");
+   					$(`#stateSeq_${stateResult.task_seq}`).removeClass("btn-secondary");
+   					$(`#stateSeq_${stateResult.task_seq}`).addClass("btn-warning");
+   					
+   				} else if(stateResult.task_state === "1"){
+   					$(`#stateSeq_${stateResult.task_seq}`).text("진행중");
+  					$(`#stateSeq_${stateResult.task_seq}`).removeClass("btn-warning");
+   					$(`#stateSeq_${stateResult.task_seq}`).addClass("btn-primary");
+   					
+   				}else if(stateResult.task_state === "2"){
+   					$(`#stateSeq_${stateResult.task_seq}`).text("완료");
+   					$(`#stateSeq_${stateResult.task_seq}`).removeClass("btn-primary");
+   					$(`#stateSeq_${stateResult.task_seq}`).addClass("btn-success");
+   					
+   				}else if(stateResult.task_state === "3"){
+   					$(`#stateSeq_${stateResult.task_seq}`).text("보류");
+   					$(`#stateSeq_${stateResult.task_seq}`).removeClass("btn-success");
+   					$(`#stateSeq_${stateResult.task_seq}`).addClass("btn-secondary");	
+   				}	
+   			},
+   			error : function(err){
+   				console.log('stateChange error');
+   			}
+   		});
+		
+	}
+	
+	//신승훈 * 즐겨찾기
+	function bookmarkControlFunc(event){
+   		event.stopPropagation();
+  		let svg = $(this);
+   		
+   		$.ajax({
+   			url : 'bookmark',
+   			type : 'post',
+   			data : {taskSeq: $(this).attr('taskseq')},
+   			dataType : "json",
+   			success : function(bookmark){
+   				console.log(bookmark);
+   				if(bookmark){
+   					svg.html('<path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>');
+   					svg.addClass('bookmarked');
+   				}else {
+   					svg.html(`<path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z"/>`);
+   					svg.removeClass('bookmarked');
+   				}
+   					
+   			},
+   			error : function(err){
+   				console.log('bookmark error');
+   			}
+   		});
+   	}
+	
+	//신승훈 * 태스크 상세보기창 -> 수행도 변경
+	function tsuper_perform_change() {
+		$.ajax({
+   			url : 'performChange',
+   			type : 'post',
+   			data : {
+   				task_seq: $(this).attr('taskseq'),
+   				tsuper_perform : $(this).val()
+ 			},
+   			dataType : "json",
+   			success : function(result){
+   				console.log(result);	
+   			},
+   			error : function(err){
+   				console.log(err);
+   			}
+   		});
+	}
+	
+	//신승훈 * 태스트 상세보기
+	function showTaskModalControlFunc(event){
+		$("#showTaskModal").modal("show");
+		
+		$.ajax({
+			url: 'showTaskModal',
+			type: 'post',
+			data: { taskSeq: $(this).attr('taskSeq') },
+			dataType: 'JSON',
+			success: function(result) {
+				console.log(result);
+				console.log(members.get(result.showTask.task_sender));
+				// 신승훈 * 태스크 상세보기 정보 세팅
+				$('#view_task_sender').val(members.get(result.showTask.task_sender).memb_name + " " + result.showTask.task_sender);
+				$('#view_task_name').val(result.showTask.task_name);
+				
+				let staffListStr = '';
+				if(result.showStaff != null){
+					for(let staff of result.showStaff){
+						if(staffListStr === '')
+							staffListStr += members.get(staff.memb_mail).memb_name+"("+staff.memb_mail+")";
+						else
+							staffListStr += ", " + members.get(staff.memb_mail).memb_name+"("+staff.memb_mail+")";
+					}
+				}
+				$('#view_staffInput').val(staffListStr);
+				
+				console.log('result.showTask.task_rank');
+				let viewRankId = $(':radio[name=view_task_rank][value="' + result.showTask.task_rank + '"]').attr('id');
+				$(`#${viewRankId}`).attr('checked', true);
+				$('.view_task_rank_label').removeClass("active");
+				$(`label[for='${viewRankId}']`).addClass("active");
+				
+				let viewRadioId2 = $(':radio[name=view_task_state][value="' + result.showTask.task_state + '"]').attr('id');
+				console.log(viewRadioId2);
+				$(`#${viewRadioId2}`).attr('checked', true);
+				$('.view_task_state_label').removeClass("active");
+				$(`label[for='${viewRadioId2}']`).addClass("active");
+				
+				let isEmptyStartDate;
+				if(result.showTask.exp_startdate == null)
+					isEmptyStartDate = 0;
+				else
+					isEmptyStartDate = 1;
+				
+				$(':radio[name=view_chk_startDate][value="' + isEmptyStartDate + '"]').attr('checked', true);
+				if(isEmptyStartDate == 1){
+					$("#datepicker").show();
+					$('#datepicker').datepicker();
+					$(".gj-icon").show();
+					
+					let year = result.showTask.exp_startdate.substr(0, 4);
+					let month = result.showTask.exp_startdate.substr(5, 2);
+					let day = result.showTask.exp_startdate.substr(8, 2);
+					
+					$('#datepicker').val(month+"/"+day+"/"+year);
+				}else {
+					$("#datepicker").hide();
+					$(".gj-icon").hide();
+				}
+				
+				let isEmptyEndDate;
+				if(result.showTask.exp_enddate == null)
+					isEmptyEndDate = 0;
+				else
+					isEmptyEndDate = 1;
+				
+				$(':radio[name=view_chk_endDate][value="' + isEmptyEndDate + '"]').attr('checked', true);
+				if(isEmptyEndDate == 1){
+					$("#datepicker2").show();
+					$('#datepicker2').datepicker();
+					$(".gj-icon").show();
+					
+					let year = result.showTask.exp_enddate.substr(0, 4);
+					let month = result.showTask.exp_enddate.substr(5, 2);
+					let day = result.showTask.exp_enddate.substr(8, 2);
+					
+					$('#datepicker2').val(month+"/"+day+"/"+year);
+				}else {
+					$("#datepicker2").hide();
+					$(".gj-icon").hide();
+				}
+				
+				$('#view_task_content').val(result.showTask.task_content);
+				
+				let performHTML = '<span class="input-group-text" style="justify-content:center; margin-left:15px; margin-bottom:10px; width:100px;">수행도</span> <ul>';
+				let performIndex = 0;
+				if(result.showStaff != null)
+					for(let staff of result.showStaff){
+						if(staff.memb_mail === [[${#authentication.name}]])
+							performHTML += `<li>${members.get(staff.memb_mail).memb_name} <input type="range" class="view_tsuper_perform" id="perform_${performIndex}" taskSeq="${result.showTask.task_seq}" min="0" max="4" style="width: 250px;"></li>`;
+						else 
+							performHTML += `<li>${members.get(staff.memb_mail).memb_name} <input type="range" class="view_tsuper_perform" id="perform_${performIndex}" taskSeq="${result.showTask.task_seq}" min="0" max="4" style="width: 250px;" disabled></li>`;
+						performIndex++;
+					}
+				performHTML += "</ul>";
+				
+				$('#view_perform_list').html(performHTML);
+				for(let i=0 ; i<performIndex ; i++){
+					$('#perform_'+i).val(result.showStaff[i].tsuper_perform/25);
+				}
+				
+				$('.view_tsuper_perform').change(tsuper_perform_change);
+				
+				// 첨부파일 $("#basic_addon_8").val(result.showTask.);
+			},
+			error: function() {
+				alert('showTaskModal error');
+			}
+		});
+	}
+	
+	// 신승훈 * html 로딩 끝났을때
+	$(document).ready(function () {
+		let taskList = [[${tasklist}]];
+		let mList = [[${list}]];
+		let navi = [[${navi}]];
+		createTaskList(taskList);
+		createNavi(navi);
+		
+		$('#task_sender_checkbox').change(selectTask);
+		$('#task_staff_checkbox').change(selectTask);
+		
+		$('.task_order_btn').click(selectTask);
+		
+		createMembers(mList);
+		
+		$('.view-modal-closeBtn').click(function() {
+			$('#showTaskModal').modal('hide');
+		});
+		
+		$('#searchBtn').click(selectTask);
+	});
+	
+	//신승훈 * mList를 Map으로 변경(for문을 사용 안하기 위해서)
+	let members = new Map();
+	function createMembers(memberList) {
+		for(let member of memberList){
+			members.set(member.memb_mail, member);
+		}
+		console.log(members);
+	}
+	
+	// 홍상혁 writeORupdate
+	function writeORupdate() {
+		let mode = $('#submitReply').val();
+		
+		let content = $('#treply_content').val();
+
+//		alert(content.length + 'length|' 	+ content);
+		if(content.length < 5 || content.length > 1000){
+			alert('댓글은 5자 이상 1000자 이하입니다.')
+			return false;
+		}
+//		alert(content);
+		return true;
+//		if(mode =='수정')
+//			return updateReply();
+//		else 
+//			return writeReply();		
+	}
+	
+	// 홍상혁 deleteReply
+	function deleteReply(treply_seq) {
+		
+		if (confirm('삭제하시겠습니까?')==false) {
+			return false;
+		}
+		
+		alert(treply_seq);
+		$.ajax({
+			url: 'deleteReply',
+			type: 'get',
+			async: false,
+			data: {treply_seq: treply_seq},
+			success: function(n) {
+				if(n == 0) {
+					alert('삭제가 실패였습니다.');
+					return false;			
+				}else
+					return true;
+			},
+			error: function(e) {
+				alert(e);
+				return false;
+			}
+		});
+	}
+	
+</script>
+<title>Insert title here</title>
+</head>
+<body>
+	<div id="wrapper">
+		<!-- content 시작 -->
+		<th:block th:replace="fragments/sidebar :: sidebar"></th:block>
+		<!-- content 끝 -->
+
+		<div id="content-wrapper" class="d-flex flex-column">
+			<!-- header 시작 -->
+			<nav th:fragment="navFragment"
+				class="navbar navbar-expand navbar-light bg-white topbar static-top shadow">
+
+				<!-- Sidebar Toggle (Topbar) -->
+				<button id="sidebarToggleTop"
+					class="btn btn-link d-md-none rounded-circle mr-3">
+					<i class="fa fa-bars"></i>
+				</button>
+
+
+				<!-- Topbar Navbar -->
+				<ul class="navbar-nav ml-auto">
+
+					<!-- Nav Item - Alerts -->
+					<li class="nav-item dropdown no-arrow mx-1"><a
+						class="nav-link dropdown-toggle" href="#" id="alertsDropdown"
+						role="button" data-toggle="dropdown" aria-haspopup="true"
+						aria-expanded="false"> <i class="fas fa-bell fa-fw"></i> <!-- Counter - Alerts -->
+							<span class="badge badge-danger badge-counter">3+</span>
+					</a> <!-- Dropdown - Alerts -->
+						<div
+							class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
+							aria-labelledby="alertsDropdown">
+							<h6 class="dropdown-header">Alerts Center</h6>
+							<a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="mr-3">
+									<div class="icon-circle bg-primary">
+										<i class="fas fa-file-alt text-white"></i>
+									</div>
+								</div>
+								<div>
+									<div class="small text-gray-500">December 12, 2019</div>
+									<span class="font-weight-bold">A new monthly report is
+										ready to download!</span>
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="mr-3">
+									<div class="icon-circle bg-success">
+										<i class="fas fa-donate text-white"></i>
+									</div>
+								</div>
+								<div>
+									<div class="small text-gray-500">December 7, 2019</div>
+									$290.29 has been deposited into your account!
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="mr-3">
+									<div class="icon-circle bg-warning">
+										<i class="fas fa-exclamation-triangle text-white"></i>
+									</div>
+								</div>
+								<div>
+									<div class="small text-gray-500">December 2, 2019</div>
+									Spending Alert: We've noticed unusually high spending for your
+									account.
+								</div>
+							</a> <a class="dropdown-item text-center small text-gray-500"
+								href="#">Show All Alerts</a>
+						</div></li>
+
+					<!-- Nav Item - Messages -->
+					<li class="nav-item dropdown no-arrow mx-1"><a
+						class="nav-link dropdown-toggle" href="#" id="messagesDropdown"
+						role="button" data-toggle="dropdown" aria-haspopup="true"
+						aria-expanded="false"> <i class="fas fa-envelope fa-fw"></i> <!-- Counter - Messages -->
+							<span class="badge badge-danger badge-counter">7</span>
+					</a> <!-- Dropdown - Messages -->
+						<div
+							class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
+							aria-labelledby="messagesDropdown">
+							<h6 class="dropdown-header">Message Center</h6>
+							<a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="dropdown-list-image mr-3">
+									<img class="rounded-circle"
+										th:src="@{/img/undraw_profile_1.svg}" alt="...">
+									<div class="status-indicator bg-success"></div>
+								</div>
+								<div class="font-weight-bold">
+									<div class="text-truncate">Hi there! I am wondering if
+										you can help me with a problem I've been having.</div>
+									<div class="small text-gray-500">Emily Fowler · 58m</div>
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="dropdown-list-image mr-3">
+									<img class="rounded-circle"
+										th:src="@{/img/undraw_profile_2.svg}" alt="...">
+									<div class="status-indicator"></div>
+								</div>
+								<div>
+									<div class="text-truncate">I have the photos that you
+										ordered last month, how would you like them sent to you?</div>
+									<div class="small text-gray-500">Jae Chun · 1d</div>
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="dropdown-list-image mr-3">
+									<img class="rounded-circle"
+										th:src="@{/img/undraw_profile_3.svg}" alt="...">
+									<div class="status-indicator bg-warning"></div>
+								</div>
+								<div>
+									<div class="text-truncate">Last month's report looks
+										great, I am very happy with the progress so far, keep up the
+										good work!</div>
+									<div class="small text-gray-500">Morgan Alvarez · 2d</div>
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="dropdown-list-image mr-3">
+									<img class="rounded-circle"
+										src="https://source.unsplash.com/Mv9hjnEUHR4/60x60" alt="...">
+									<div class="status-indicator bg-success"></div>
+								</div>
+								<div>
+									<div class="text-truncate">Am I a good boy? The reason I
+										ask is because someone told me that people say this to all
+										dogs, even if they aren't good...</div>
+									<div class="small text-gray-500">Chicken the Dog · 2w</div>
+								</div>
+							</a> <a class="dropdown-item text-center small text-gray-500"
+								href="#">Read More Messages</a>
+						</div></li>
+
+					<div class="topbar-divider d-none d-sm-block"></div>
+
+					<!-- Nav Item - User Information -->
+					<li class="nav-item dropdown no-arrow"><a
+						class="nav-link dropdown-toggle" href="#" id="userDropdown"
+						role="button" data-toggle="dropdown" aria-haspopup="true"
+						aria-expanded="false"> <span
+							class="mr-2 d-none d-lg-inline text-gray-600 small">Username</span>
+							<img class="img-profile rounded-circle"
+							th:src="@{/img/undraw_profile.svg}">
+					</a> <!-- Dropdown - User Information -->
+						<div
+							class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+							aria-labelledby="userDropdown">
+							<a class="dropdown-item" href="#"> <i
+								class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> 마이페이지
+							</a> <a class="dropdown-item" href="#"> <i
+								class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i> 화상채팅
+							</a>
+							<div class="dropdown-divider"></div>
+							<a class="dropdown-item" href="#" data-toggle="modal"
+								data-target="#logoutModal"> <i
+								class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+								로그아웃
+							</a>
+						</div></li>
+				</ul>
+			</nav>
+			<nav class="navbar navbar-expand-lg"
+				style="background-color: #f1f3f5; border-bottom: solid 2px black;">
+				<div>
+					<!-- 태스크 추가 modal trigger -->
+					<button class="btn btn-primary" id="newTask" data-bs-toggle="modal"
+						data-bs-target="exampleModal">
+						<i class="fa-solid fa-plus"></i>태스크 추가
+					</button>
+					
+					<div class="btn btn-primary">
+					  <label><input type="checkbox" id="task_sender_checkbox"> 내가 할당</label>
+			    	  <label><input type="checkbox" id="task_staff_checkbox">  내가 담당</label>
+					</div>
+					
+					<button class="btn btn-primary task_order_btn" do="task_state">
+						진행도별	
+					</button>
+					
+					<button class="btn btn-primary task_order_btn" do="task_rank">
+						우선순위별
+					</button>
+					
+					<button class="btn btn-primary task_order_btn" do="bookmark">
+						즐겨찾기별
+					</button>
+					
+					<td style="text-align:left;" class="col-lg-6">
+						 <input type="text" id="searchWord" name="searchWord" th:value="${searchWord}">								
+	                     <button class="btn btn-primary" type="button" id="searchBtn">
+			                     <i class="fas fa-search fa-sm"></i>
+		              	 </button>
+					</td>
+				</div>
+			</nav>
+			
+			<!-- 테스크 목록 출력 -->
+			<div class="col-xl-7 col-md-6 m-3" id="taskListDiv">
+				
+			</div>
+			
+			<!-- nav 시작 -->
+			<ul class="pagination" id="naviDiv">
+			</ul>
+			<!-- nav 끝 -->
+		<!-- * 신승훈 태스크 상세보기 창 모달 -->
+	<div class="modal fade" id="showTaskModal" tabindex="-1"
+				aria-labelledby="showTaskModalLabel" aria-hidden="true">
+
+				<form>
+					<div class="modal-dialog modal-lg">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title" id="showTaskModalLabel">태스크 상세보기</h5>
+								<button class="ml-auto mr-2 btn btn-primary">수정</button>
+								<button class="mr-2 btn btn-primary">삭제</button>
+								<button type="button" class="btn-close view-modal-closeBtn" data-bs-dismiss="modal" aria-label="Close"></button>
+							</div>
+							<div class="modal-body">
+							
+								<!-- 신승훈 * 할당자 -->
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">할당자</span>
+									</div>
+									
+									<input type="text" id="view_task_sender" class="mr-4 form-control" readonly
+										aria-label="Username" aria-describedby="basic-addon1">
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">담당자</span>
+									</div>
+									<input type="text" class="mr-4 form-control" id="view_staffInput"
+										name="staffs" placeholder="담당자를 추가해주세요" aria-label="Username"
+										value="" aria-describedby="basic-addon1">
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">제목</span>
+									</div> 
+									<input type="text" class="mr-4 form-control" name="task_name" id="view_task_name" readonly
+										placeholder="태스크 제목을 입력하세요" aria-label="Username" required
+										aria-describedby="basic-addon1">
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">우선순위</span>
+									</div>
+									<div class="btn-group btn-group-toggle" data-toggle="buttons">
+										<label class="btn btn-outline-info view_task_rank_label" for="view_task_rank_0"> 
+											<input type="radio" name="view_task_rank" id="view_task_rank_0"
+												class="radioSelection" value="0"> 낮음
+										</label> 
+										<label class="btn btn-outline-info view_task_rank_label" for="view_task_rank_1"> 
+											<input type="radio" name="view_task_rank" id="view_task_rank_1"
+												class="radioSelection" value="1">보통
+										</label> 
+										<label class="btn btn-outline-info view_task_rank_label" for="view_task_rank_2"> 
+											<input type="radio" name="view_task_rank"id="view_task_rank_2"
+												class="radioSelection" value="2"> 높음
+										</label>
+									</div>
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">진행도</span>
+									</div>
+									<div class="btn-group btn-group-toggle" data-toggle="buttons">
+										<label class="btn btn-outline-secondary view_task_state_label" for="view_task_state_0"> 
+											<input type="radio" name="view_task_state" id="view_task_state_0" class="radioSelection" value="0"> 진행전
+										</label> 
+										<label class="btn btn-outline-secondary view_task_state_label" for="view_task_state_1"> 
+											<input type="radio" name="view_task_state" id="view_task_state_1" class="radioSelection" value="1"> 진행중
+										</label> 
+										<label class="btn btn-outline-secondary view_task_state_label" for="view_task_state_2"> 
+											<input type="radio" name="view_task_state" id="view_task_state_2" class="radioSelection" value="2"> 완료
+										</label> 
+										<label class="btn btn-outline-secondary view_task_state_label" for="view_task_state_3"> 
+											<input type="radio" name="view_task_state" id="view_task_state_3" class="radioSelection" value="3"> 보류
+										</label>
+									</div>
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">예상시작일</span>
+										<input type="radio" class="ml-3" id="startNone" name="view_chk_startDate" value="0" checked="checked"><span class="mt-2 ml-1">없음</span>
+										<input type="radio" class="ml-3" id="startExist" name="view_chk_startDate" value="1"><span class="mt-2 ml-1">있음</span>
+										<input id="datepicker" class="ml-3 mt-2" width="150" name="exp_startdate" style="margin-left: 20px;" />
+									</div>
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">예상종료일</span>
+										<input type="radio" class="ml-3" id="endNone" name="view_chk_endDate" value="0"checked="checked"><span class="mt-2 ml-1">없음</span>
+										<input type="radio" class="ml-3" id="endExist" name="view_chk_endDate" value="1"><span class="mt-2 ml-1">있음</span>
+										<input id="datepicker2" class="ml-3 mt-2" width="150" name="exp_enddate" style="margin-left: 20px;" />
+									</div>
+								</div>
+								
+								<!-- 신승훈 * 수행도 -->
+								<div class="slidecontainer" id="view_perform_list">
+	
+								</div>
+								
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">첨부파일</span>
+									</div>
+									<input type="file" onchange="addFile(this);">
+								</div>
+
+								<div class="file-list"></div>
+
+								<div class="input-group m-3">
+									<textarea class="mr-4 form-control" name="task_content" id="view_task_content" readonly style="resize:none;" rows="5">내용을 입력하세요</textarea>
+								</div>
+								
+							
+							
+						 <!-- 댓글 html -->
+				   <!-- 홍상혁 댓글 입력 폼 -->
+ 					<div class="mb-3">
+						<form id="ReplyForm" th:action="@{/taskRpl/writeReply}" method="post" onsubmit="return writeORupdate();">
+
+							<div style="display:inline" height="50px">
+						
+								<input type="hidden" name="task_seq" id="task_seq" th:value="${task_seq}"/>
+								<input type="text" class="col-lg-10" id="treply_content" name="treply_content" placeholder="댓글을 입력하세요">
+								<input type="file" id="uploadFile" name="uploadFile" class="col-lg-9 mt-2" value="첨부파일"/> 	
+								<input type="submit" id="submitReply" class="btn btn-primary bg-gradient-primary" value="댓글저장" />
+							</div>
+						</form>
+					</div>
+					<br>
+	 
+
+					<!-- 홍상혁 1번째 댓글 -->
+					
+				<th:block th:if="${replyList}">
+							<div th:each="taskReplyDetail:${replyList}" class="m-0 p-0 bg-white" style="border-bottom: 1px solid rgb(192, 192, 192); border-top: 1px solid rgb(192, 192, 192); ">
+								<th:block th:if="${#authentication.name} == ${taskReplyDetail.treply_writer}">
+									<b><p th:text="${taskReplyDetail.treply_content}" class="text-primary m-0 mx-2 my-2 p-0">댓글 제목입니다.</p></b>
+								</th:block>
+								<th:block th:unless="${#authentication.name} == ${taskReplyDetail.treply_writer}">
+									<p th:text="${taskReplyDetail.treply_content}" class="m-0 mx-2 my-2 p-0">댓글 제목입니다.</p>
+								</th:block>
+
+						        <div class="d-flex m-0 mb-2 mx-3 p-0 justify-content-between">
+ 									<div class="d-flex m-0 p-0 justify-content-between align-items-center"><i class="fas fa-user mr-2"></i><span th:text="${taskReplyDetail.memb_name}">홍길동 </span> </div> 
+									<div class="d-flex m-0 p-0 align-items-center"><i class="fas fa-clock mr-2"></i><span th:text="${taskReplyDetail.treply_inputdate}">2022.09.15 15:03:00</span> </div>
+									<div class="m-0 p-0 text-white">
+										<div th:if="${#authentication.name} == ${taskReplyDetail.treply_writer}">
+											<a class="btn-sm bg-gradient-primary text-white" href="#" th:onclick="'changeMode(' + ${taskReplyDetail.treply_seq} + ');'"><i class="fas fa-pen"></i></a>							
+				<!-- 							<a class="btn-sm bg-gradient-primary text-white" th:href="@{/taskReply/changeReply(treply_seq=${taskReplyDetail.treply_seq})}">수정</a>  -->								
+				<!-- 							<a class="btn-sm bg-gradient-primary text-white" th:href="@{/taskReply/changeReply(treply_seq=${taskReplyDetail.treply_seq})}">수정</a>  -->	
+											<!-- <a class="btn-sm bg-gradient-primary text-white" href="|javascript:/taskReply/deleteReply(${taskReplyDetail.treply_seq})|" th:onclick="${'return deleteReply('+taskReplyDetail.treply_seq +');'">삭제</a> -->
+											<a class="btn-sm bg-gradient-primary text-white" th:href="@{/taskRpl/replyList(task_seq= ${taskReplyDetail.task_seq})}" th:onclick="'return deleteReply('+${taskReplyDetail.treply_seq} +');'"><i class="fas fa-trash-alt"></i></a>
+											
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+				</th:block>
+						<br><br>								<!-- 홍상혁 댓글 html 끝 -->
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							
+								
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-secondary view-modal-closeBtn" data-bs-dismiss="modal">취소</button>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+			
+			<!-- 태스크 추가 modal -->
+			<div class="modal fade" id="exampleModal" tabindex="-1"
+				aria-labelledby="exampleModalLabel" aria-hidden="true">
+
+				<form action="./task/addNewTask" method="POST" id="newTaskForm"
+					enctype="multipart/form-data">
+					<div class="modal-dialog modal-lg">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title" id="exampleModalLabel">새로운 태스크 추가</h5>
+								<button type="button" class="btn-close" data-bs-dismiss="modal"
+									aria-label="Close"></button>
+							</div>
+							<div class="modal-body">
+								<!-- 할당자 -->
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="basic-addon1">할당자</span>
+									</div>
+									<input type="text" class="form-control" readonly
+										th:value="${member.memb_name} + ${member.memb_mail}"
+										aria-label="Username" aria-describedby="basic-addon1">
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="basic-addon1"
+											onclick="showAddMember();">담당자</span> <span id="staffNotice">담당자를
+											추가하지 않을 시, 업무 할당자 본인이 담당자로 배정됩니다.</span>
+										<div id="mems">
+											<ul id="memList">
+											</ul>
+										</div>
+
+										<input type="hidden" id="memList2" name="memList2" value="">
+									</div>
+
+								</div>
+
+								<div id="memDiv">
+									<input type="text" class="form-control" id="staffInput"
+										name="staffs" placeholder="아이디 또는 이름으로 멤버를 검색하세요"
+										aria-label="Username" value="" aria-describedby="basic-addon1">
+									<div id="chatMem"
+										style="overflow: auto; width: 100%; height: 200px; margin: 10px;">
+
+										<table class="table table-hover">
+											<tr th:each="list : ${list}" th:id="${list.memb_mail}"
+												th:name="${list.memb_name}" onclick="appendMem(id);">
+												<td th:text="${list.memb_ogfile}"></td>
+												<td th:text="${list.memb_name}"></td>
+												<td th:text="${list.memb_mail}"></td>
+											</tr>
+										</table>
+									</div>
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="basic-addon1">제목</span>
+									</div>
+									<input type="text" class="form-control" name="task_name"
+										placeholder="태스크 제목을 입력하세요" aria-label="Username" required
+										aria-describedby="basic-addon1">
+								</div>
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="basicSelection">우선순위</span>
+									</div>
+									<div class="btn-group btn-group-toggle" data-toggle="buttons">
+										<label class="btn btn-outline-info"> <input
+											type="radio" name="task_rank" class="radioSelection"
+											checked="checked" id="priority1" value="0"> 낮음
+										</label> <label class="btn btn-outline-info"> <input
+											type="radio" name="task_rank" class="radioSelection"
+											id="priority2" value="1">보통
+										</label> <label class="btn btn-outline-info"> <input
+											type="radio" name="task_rank" class="radioSelection"
+											id="priority3" value="2"> 높음
+										</label>
+									</div>
+								</div>
+
+
+								<div class="input-group m-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="basicSelection2">진행도</span>
+									</div>
+									<div class="btn-group btn-group-toggle" data-toggle="buttons">
+										<label class="btn btn-outline-secondary"> <input
+											type="radio" name="task_state" class="radioSelection"
+											checked="checked" id="yet" value="0"> 진행전
+										</label> <label class="btn btn-outline-secondary"> <input
+											type="radio" name="task_state" class="radioSelection"
+											id="ongoing" value="1"> 진행중
+										</label> <label class="btn btn-outline-secondary"> <input
+											type="radio" name="task_state" class="radioSelection"
+											id="done" value="2"> 완료
+										</label> <label class="btn btn-outline-secondary"> <input
+											type="radio" name="task_state" class="radioSelection"
+											id="pending" value="3"> 보류
+										</label>
+									</div>
+								</div>
+
+								<div class="input-group m-3" id="start">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="basicSelection4">예상시작일</span>
+										<input type="radio" id="startNone" name="chk_startDate"
+											value="0" checked="checked">없음 <input type="radio"
+											id="startExist" name="chk_startDate" value="1">있음 <input
+											id="datepicker" width="150" name="exp_startdate"
+											style="margin-left: 20px;" />
+									</div>
+								</div>
+
+								<div class="input-group m-3" id="end">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="basicSelection5">예상종료일</span>
+										<input type="radio" name="chk_endDate" id="endNone" value="0"
+											checked="checked">없음 <input type="radio"
+											id="endExist" name="chk_endDate" value="1">있음 <input
+											id="datepicker2" width="150" name="exp_enddate"
+											style="margin-left: 20px;" />
+									</div>
+								</div>
+
+								<div class="input-group m-3" id="files">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="basicSelection3">첨부파일</span>
+									</div>
+									<input type="file" name="uploads">
+									<button type="button" class="btn btn-success btn-circle btn-sm"
+										onclick="addNewFileInput()">+</button>
+								</div>
+
+								<div class="input-group m-3">
+									<textarea class="form-control" id="exampleFormControlTextarea1"
+										name="task_content" rows="5">내용을 입력하세요</textarea>
+								</div>
+							</div>
+
+							<div class="modal-footer">
+								<button type="button" id="closeNewTask"
+									class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+								<button type="button" class="btn btn-primary"
+									onclick="submitForm();">등록</button>
+							</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	<!-- header 끝 -->
+	<!-- footer 시작 -->
+	<th:block th:replace="fragments/footer :: footerFragment"></th:block>
+	<!-- footer 끝 -->
+	</div>
+	</div>
+
+	<script>
+		//파일 업로드 개수
+		let fileCount = 0;
+
+		//멤버 검색창 오픈 여부
+		let isOpened = false;
+		$("#memDiv").hide();
+
+		//datepicker 달력 숨겨두기
+		$("#datepicker").hide();
+		$("#datepicker2").hide();
+
+		//새로운 태스크 모달창 제어
+		$("#newTask").click(function(e) {
+			e.preventDefault();
+			$("#exampleModal").modal("show");
+		});
+
+		$("#closeNewTask").click(function(e) {
+			e.preventDefault();
+			$("#exampleModal").modal("hide");
+		});
+
+		//예상 시작일/종료일 제어
+		$("#startNone").change(function() {
+			$("#datepicker").hide();
+			$(".gj-icon").hide();
+		});
+
+		$("#startExist").change(function() {
+
+			$("#datepicker").show();
+			$('#datepicker').datepicker({format : 'yyyy-mm-dd'});
+			$(".gj-icon").show();
+		});
+
+		$("#endNone").change(function() {
+			$("#datepicker2").hide();
+			$(".gj-icon").hide();
+		});
+
+		$("#endExist").change(function() {
+			$("#datepicker2").show();
+			$('#datepicker2').datepicker({format : 'yyyy-mm-dd'});
+			$(".gj-icon").show();
+		});
+
+		//진행상태에 따른 시작/종료일 제어
+		$("#ongoing").change(function() {
+			$("#basicSelection4").text("시작일");
+			$("#basicSelection5").text("예상종료일");
+		});
+
+		$("#yet").change(function() {
+			$("#basicSelection4").text("예상시작일");
+			$("#basicSelection5").text("예상종료일");
+		});
+
+		$("#done").change(function() {
+			$("#basicSelection4").text("시작일");
+			$("#basicSelection5").text("종료일");
+		});
+
+		$("#pending").change(function() {
+			$("#basicSelection4").text("예상시작일");
+			$("#basicSelection5").text("예상종료일");
+		});
+
+		//담당자 검색 ajax
+		$("#staffInput").keyup(function() {
+			console.log('keyup 실행');
+			
+			let val = $("#staffInput").val();
+			
+			$.ajax({
+				url : '../../member/memSearchByIdName',
+				type : 'POST',
+				data : {
+					searchWord : val
+				},
+				success : function(list){
+					let content = '';
+					let result = $("#chatMem");
+					
+					result.empty();
+					
+					$.each(list, function(i, list){
+						content += '<table><tr><td>' + list.memb_ogfile + '<td>'
+						+ list.memb_name + '</td><td>' + list.memb_mail + '</td></tr></table>'
+					});
+					
+					result.html(content);
+				}
+				
+			})
+
+		});
+
+		//
+		function showAddMember() {
+
+			if (isOpened) {
+				$("#memDiv").hide();
+				isOpened = false;
+			} else {
+				$("#memDiv").show();
+				isOpened = true;
+			}
+		}
+
+		function appendMem(id) {
+
+			$("#staffNotice").hide();
+
+			console.log('appendMem 실행됨' + id);
+
+			var list = document.querySelectorAll('li.mem-item');
+
+			let memLists = new Array();
+
+			for (var i = 0; i < list.length; i++) {
+				memLists[i] = list[i].id;
+			}
+
+			var li = $("#memList2").val();
+
+			if (memLists.includes(id)) {
+
+				alert('이미 추가된 멤버입니다.');
+
+			} else {
+
+				li += id + ",";
+
+				$("#memList2").val(li);
+
+
+				$.ajax({
+
+							url : "../../member/memSearch",
+							type : "POST",
+							data : {
+								memb_mail : id
+							},
+							success : function(result) {
+								
+								console.log(result);
+								
+								$("#memList")
+										.append(
+												"<li class='mem-item' id= "+ id +  ">"
+														+ "<span>"
+														+ result
+														+ "</span>"
+														+ "<span class='del-btn' idx='" + id + "'>&nbsp;x</span></li>");
+							}
+						});
+			}
+		}
+
+		$(document).on("click", ".del-btn", function(e) {
+			var index = $(this).attr("idx");
+			$(this).parent().remove();
+		});
+
+		//체크리스트
+		function addCheckList() {
+
+		}
+
+		//file 태그 추가
+		function addNewFileInput() {
+
+			if (fileCount < 4) {
+				$("#files").append("<input type='file' name='uploads'>");
+				fileCount++;
+			} else {
+				alert('파일은 최대 다섯 개 첨부할 수 있습니다.');
+			}
+		}
+
+		//form 전송
+		function submitForm() {
+
+			$("#newTaskForm").submit();
+
+			alert('성공적으로 등록되었습니다.');
+
+			$("#exampleModal").modal("hide");
+		}
+	</script>
+</body>
+</html>

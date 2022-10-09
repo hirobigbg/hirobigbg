@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head th:replace="fragmentsManager/config :: configFragment">
+<meta charset="UTF-8">
+<title>구성원 페이지</title>
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js?ver=1"></script>
+<!-- CSS only -->
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css"
+	rel="stylesheet"
+	integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT"
+	crossorigin="anonymous">
+	
+	<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</head>
+<body>
+
+
+
+	<div id="wrapper">
+		<!-- content 시작 -->
+		<th:block th:replace="fragmentsManager/sidebar :: sidebar"></th:block>
+		<!-- content 끝 -->
+
+		<div id="content-wrapper" class="d-flex flex-column">
+			<!-- header 시작 -->
+			<th:block th:replace="fragmentsManager/header :: navFragment"></th:block>
+
+			<!-- header 끝 -->
+			<div class="container-fluid">
+
+				<!-- Page Heading -->
+				<h1 class="h3 mb-2 text-gray-800">프로젝트 관리</h1>
+
+				<!-- DataTales Example -->
+				<div class="card shadow mb-4">
+					<div class="card-header py-3">
+						<h6 class="m-0 font-weight-bold text-primary">프로젝트 리스트</h6>
+
+					</div>
+
+					<div class="w3-clear nextprev">
+						<div class="form-inline">
+							<form class="form-inline" id="pagingForm" method="get"
+								th:action="@{../manager/project}">
+								<input type="hidden" name="page" id="page">
+
+
+								<div id="listTop" class="w3-left w3-btn">
+
+
+									<label class="mr-sm-2" id="listTop1"> <input
+										class="form-control mb-2 mr-sm-2" type="text" id="listTop1"
+										name="searchWord" th:value="${searchWord}">
+										<button class="btn btn-primary mb-2" type="button"
+											onclick="pagingFormSubmit(1)">
+											<i class="fas fa-search fa-sm"></i>
+										</button>
+									</label>
+
+								</div>
+							</form>
+						</div>
+					</div>
+
+					<div class="card-body">
+						<div class="table-responsive">
+							<div id="dataTable_wrapper"
+								class="dataTables_wrapper dt-bootstrap4">
+								<div class="row">
+									<div class="col-sm-12 col-md-6">
+										<div class="dataTables_length" id="dataTable_length"></div>
+									</div>
+
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-sm-12">
+								<form action="">
+							<table class="table table-bordered dataTable" id="dataTable" cellspacing="0" role="grid" aria-describedby="dataTable_info" style="width: 100%;">
+							<thead>
+							<tr role="row">
+									<th class="sorting sorting_asc" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" aria-sort="ascending" style="width: 120px;">태스크명</th>
+									<th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" style="width: 120px;">담당자</th>
+									<th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" style="width: 80px;">우선순위</th>
+									<th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" style="width: 80px;">진행상태</th>
+									<th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" style="width: 90px;">시작일</th>
+									<th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" style="width: 90px;">종료일</th>
+									<th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" style="width: 10px;">협조</th>
+								</tr>
+							 </thead>
+							<tbody> 						
+							<tr class="odd" th:each="l:${taskLists}">
+							<td th:text=${l.task_name}>
+							</td>
+							<td th:text=${l.tastMembList}>
+							</td>
+							<td th:text=${l.task_rank}>
+							</td>
+							<td th:text=${l.task_state}>
+							</td>
+							<td th:text=${l.task_startdate}>
+							</td>
+							<td th:text=${l.task_enddate}>
+							</td>
+							<td>
+							<button class="btn btn-primary" th:num="${l.task_seq}" onclick="helpWork(this.getAttribute('num'))">
+							  <span class="spinner-grow spinner-grow-sm"></span>
+							  요청
+							</button>
+							</td>
+							</tr>
+							</tbody>
+							</table>
+								</form>
+							</div>
+						</div>
+
+						<div class="navigator">
+							<a class="btn btn-primary"
+								th:href="|javascript:pagingFormSubmit(${navi.currentPage - 1})|">Previous</a>
+
+							<span
+								th:each="counter : ${#numbers.sequence(navi.startPageGroup, navi.endPageGroup)}">
+								<th:block th:if="${counter == navi.currentPage}">
+									<b>
+								</th:block> <a class="btn btn-light" th:text="${counter}"
+								th:href="|javascript:pagingFormSubmit(${counter})|"></a>&nbsp; <th:block
+									th:if="${counter == navi.currentPage}">
+									</b>
+								</th:block>
+							</span> <a class="btn btn-primary"
+								th:href="|javascript:pagingFormSubmit(${navi.currentPage + 1})|">Next</a>
+							<br>
+							<br>
+
+						</div>
+
+
+						<!-- footer 시작 -->
+						<th:block th:replace="fragmentsManager/footer :: footerFragment"></th:block>
+						<!-- footer 끝 -->
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- 태스크 추가 modal -->
+	<script
+		src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js?ver=1"></script>
+
+	<div class="modal fade modal-signin" id="exampleModal" tabindex="-1"
+		aria-labelledby="exampleModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+
+
+		
+		
+				<div class="modal-header" style="padding: 1rem;">
+					<h3 class="modal-title fw-bold mb-0" id="exampleModalLabel">
+						프로젝트 명: <span id="modalPjtName"></span>
+					</h3>
+					<p id="modalPjtName"></p>
+				</div>
+				<div class="modal-header  pb-4 border-bottom-0"
+					style="padding: 1rem;">
+					<h4 class="modal-title fw-bold mb-0" id="exampleModalLabel">관리가
+						필요한 태스크</h4>
+				</div>
+				<div id="printTasklist"></div>
+
+
+
+				<div class="modal-footer">
+					<button type="button" id="closeNewTask" class="btn btn-secondary"
+						data-bs-dismiss="modal">확인</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+	<script th:inline="javascript">
+	
+	
+	//요청버튼
+	function helpWork(num){
+		window.open("../manager/helpWork?task_seq="+num,
+				"업무 요청", "width=500, height=450, top=30, left=30");
+	}
+	
+	
+	function showPop() {
+
+        console.log('showPop 실행');
+
+        window.open("multiRoom/chatHome", "메신저",
+              "width=500, height=700, top=10, left=10");
+     }
+		
+ 
+		let taskListArray = /*[[${taskLists}]]*/;
+		console.log(taskListArray);
+		
+
+		
+
+
+ 
+function pagingFormSubmit(currentPage) {
+	var form = document.getElementById('pagingForm');
+	var page = document.getElementById('page');
+	page.value = currentPage;
+	form.submit();
+}
+
+//새로운 태스크 모달창 제어
+
+	function openModal(domain) {
+	 let prj_domain = domain;
+	 
+	 
+	
+	
+	 $.ajax({
+			url : "ProjectInfo",
+			type : "POST",
+			data : {
+				domain : prj_domain,
+			},
+			dataType : 'json',
+			success : function(resultMap) {
+				$('#printTasklist').empty();
+				
+				$('#modalPjtName').text(resultMap.projects.prj_name);
+				$('#modalPjtDomain').text(resultMap.projects.prj_domain);
+				$('#modalPjtDate').text(resultMap.projects.prj_date);
+				$('#modalPjtEnabled').text(resultMap.projects.prj_enabled);
+				
+	
+				
+				let result="";
+				
+				result += '<table class="table table-bordered dataTable" id="dataTable" cellspacing="0" role="grid" aria-describedby="dataTable_info" style="width: 100%;">'
+							+ '<thead>'
+							+	'<tr role="row">'
+							+		'<th class="sorting sorting_asc" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" aria-sort="ascending" style="width: 110px;">태스크명</th>'
+							+		'<th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" style="width: 50px;">담당자</th>'
+							+		'<th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" style="width: 80px;">우선순위</th>'
+							+		'<th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" style="width: 80px;">진행상태</th>'
+							+		'<th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" style="width: 90px;">시작일</th>'
+							+		'<th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" style="width: 90px;">종료일</th>'
+							+		'<th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" style="width: 10px;">협조</th>'
+							+	'</tr>'
+							+ '</thead>'
+							+'<tbody> '	;					
+	
+							
+			
+		 
+			
+		taskListArray.forEach((value, index, array)=>{
+					result +=	'<tr class="odd" >'
+							+	'<td class="sorting_1">'
+							+		value.task_name
+							+	'</td>'
+							+	'<td>'
+							+		value.task_sender
+							+	'</td>'
+							+	'<td>'
+							+		value.task_rank
+							+	'</td>'
+							+	'<td>'
+							+		value.task_state
+							+	'</td>'
+							+	'<td>'
+							+		value.task_startdate
+							+	'</td>'
+							+	'<td>'
+							+		value.task_enddate
+							+	'</td>'
+							+	'<td>'
+							+		'<input type="button" value="요청" class="btn btn-info">'
+							+	'</td>'
+							+ '</tr>';
+							})
+							
+				 
+							
+							+'</tbody>'
+							+'</table>';
+
+				
+				$("#printTasklist").append(result);
+				$("#exampleModal").modal("show"); 
+			},
+			error: function(e){
+				alert(JSON.stringify(e));
+			}
+		});
+	 
+
+} 
+
+
+$("#closeNewTask").click(function(e) {
+	e.preventDefault();
+	$("#exampleModal").modal("hide");
+})
+
+let myChartOne = document.getElementById('myChartOne').getContext('2d');
+
+let barChart = new Chart(myChartOne,{
+	type : 'bar', //pir,line,doughnut,polarArea
+	data : {
+		labels :['진행전','진행중','완료'],
+		datasets : [{
+			labels :'업무 진행도',
+		data : [
+			10,
+			50,
+			30,
+		]
+		}]	
+	}
+})
+
+</script>
+<!-- JavaScript Bundle with Popper -->
+	<script
+		src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js"
+		integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8"
+		crossorigin="anonymous"></script>
+
+	<script
+		src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.slim.min.js"></script>
+	<script
+		src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+	<script
+		src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"></script>
+	<script th:src="@{/js/jquery-3.6.0.min.js}"></script>
+	<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</body>
+</html>
+

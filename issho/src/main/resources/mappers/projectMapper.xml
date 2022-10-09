@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.softsociety.issho.project.dao.ProjectDAO">
+	
+	<select id="domainCheck" parameterType="String" resultType="int">
+		SELECT COUNT(*)
+		FROM projects
+		WHERE prj_domain = #{prj_domain}
+	</select>
+	
+	<select id="getPrjMem" parameterType="ProjectMember" resultType="ProjectMember">
+		SELECT * FROM projectmember
+		WHERE prj_domain = #{prj_domain}
+		AND memb_mail = #{memb_mail}
+	</select>
+
+	<insert id="newProject" parameterType="Projects">
+		INSERT INTO projects(prj_domain, prj_name)
+		VALUES(#{prj_domain}, #{prj_name})
+	</insert>
+
+	<insert id="grantPM" parameterType="ProjectMember">
+		INSERT INTO projectmember
+		VALUES(#{prj_domain}, #{memb_mail}, #{pjmb_right})
+	</insert>
+	
+	<select id="searchOne" parameterType="Projects" resultType="Projects">
+		SELECT *
+		FROM projects
+		WHERE prj_domain = #{prj_domain}
+	</select>
+	
+	<!-- 관리자페이지 프로젝트 리스트 -->
+	<select id="listProjects" parameterType="Map" resultType="Projects">
+		select
+		prj_domain
+		,prj_name
+		,prj_date
+		,prj_enabled
+	from projects
+	<where>
+	<if test="searchWord != null">
+		prj_name like '%' || #{searchWord} || '%'	
+	</if>
+	</where>
+	order by 
+		1 desc
+	</select>
+	
+	<!-- 관리자 페이지 프로젝트 상세페이지  -->
+	<select id="getProjectsInfo" resultType="Projects" parameterType="String">
+	select * 
+	from projects
+	where
+		prj_domain=#{prj_domain}
+</select>
+
+</mapper>

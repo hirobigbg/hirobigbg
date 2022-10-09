@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<th:block th:replace="fragments/config :: head"></th:block>
+<meta charset="UTF-8">
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"
+	integrity="sha512-zYXldzJsDrNKV+odAwFYiDXV2Cy37cwizT+NkuiPGsa9X1dOz04eHvUWVuxaJ299GvcJT31ug2zO4itXBjFx4w=="
+	crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!-- gijgo datepicker library -->
+<script src="https://unpkg.com/gijgo@1.9.13/js/gijgo.min.js"
+	type="text/javascript"></script>
+<link href="https://unpkg.com/gijgo@1.9.13/css/gijgo.min.css"
+	rel="stylesheet" type="text/css" />
+<title>Insert title here</title>
+<style>
+@import
+	url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap')
+	;
+
+.parent {
+	width: 90%;
+	height: 100%;
+	margin: 0 30px;
+	/*margin: 10px auto;
+	margin-top: 30px;*/
+	display: flex;
+}
+
+.profileBox {
+	width: 50px;
+	height: 50px;
+	border-radius: 70px;
+	overflow: hidden;
+	float: left;
+	position: relative;
+}
+
+.profilePic {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	position: absolute;
+	top: 0;
+	left: 0;
+	margin: 0;
+	padding: 0;
+}
+
+.membInfo {
+	background-color: #404040;
+	color: #fff;
+	top: 80%;
+	left: 20%;
+	margin-left: -60px;
+	text-align: center;
+	border-radius: 6px;
+	padding: 5px;
+	position: absolute; /* 절대 위치를 사용 */
+	z-index: 1;
+}
+
+.membInfo:after {
+	content: " ";
+	position: absolute;
+	bottom: 100%; /* At the top of the tooltip */
+	left: 50%;
+	margin-left: -5px;
+	border-width: 5px;
+	border-style: solid;
+	border-color: transparent transparent #404040 transparent;
+}
+
+.requested {
+	flex: 1;
+	width: 25%;
+	background-color: #eeeeee;
+	margin-right: 20px;
+	box-sizing: border-box;
+}
+
+#requestedTitle {
+	font-family: 'Montserrat', sans-serif;
+	color: black;
+	text-align: center;
+	font-size: 18px;
+	padding-top: 15px;
+	font-weight: bold;
+	width: 100%;
+	height: 60px;
+	background-color: #f6c23e;
+	border-radius: 10px 10px 0px 0px;
+	margin-botton: 10px;
+}
+
+.inprogress {
+	flex: 1;
+	width: 25%;
+	background-color: #eeeeee;
+	margin-right: 20px;
+	box-sizing: border-box;
+}
+
+#progressTitle {
+	font-family: 'Montserrat', sans-serif;
+	color: black;
+	text-align: center;
+	font-size: 18px;
+	padding-top: 15px;
+	font-weight: bold;
+	width: 100%;
+	height: 60px;
+	background-color: #1cc88a;
+	border-radius: 10px 10px 0px 0px;
+	color: black;
+	text-align: center;
+	font-size: 18px;
+	padding-top: 15px;
+}
+
+.done {
+	flex: 1;
+	width: 25%;
+	background-color: #eeeeee;
+	margin-right: 20px;
+	box-sizing: border-box;
+}
+
+#doneTitle {
+	font-family: 'Montserrat', sans-serif;
+	color: black;
+	text-align: center;
+	font-size: 18px;
+	padding-top: 15px;
+	font-weight: bold;
+	width: 100%;
+	height: 60px;
+	background-color: #36b9cc;
+	border-radius: 10px 10px 0px 0px;
+	color: black;
+	text-align: center;
+	font-size: 18px;
+	padding-top: 15px;
+}
+
+.pending {
+	flex: 1;
+	width: 25%;
+	background-color: #eeeeee;
+	box-sizing: border-box;
+}
+
+#pendingTitle {
+	font-family: 'Montserrat', sans-serif;
+	color: white;
+	text-align: center;
+	font-size: 18px;
+	padding-top: 15px;
+	font-weight: bold;
+	width: 100%;
+	height: 60px;
+	background-color: #5a5c69;
+	border-radius: 10px 10px 0px 0px;
+	text-align: center;
+	font-size: 18px;
+	padding-top: 15px;
+}
+
+.draggable.dragging {
+	opacity: 0.5;
+}
+
+.nav-link {
+	color: black;
+	font-size: 17px;
+}
+
+a:link  {
+	 color:  black;
+	 text-decoration:  none;
+}
+
+a:visited  {
+	 color:  black;
+	 text-decoration:  none;
+}
+
+a:hover  {
+	 color:  black;
+	 text-decoration:  underline;
+}
+</style>
+</head>
+<body>
+	<div id="wrapper">
+		<!-- content 시작 -->
+		<th:block th:replace="fragments/sidebar :: sidebar"></th:block>
+		<!-- content 끝 -->
+
+		<div id="content-wrapper" class="d-flex flex-column">
+			<!-- header 시작 -->
+			<nav th:fragment="navFragment"
+				class="navbar navbar-expand navbar-light bg-white topbar static-top shadow">
+
+				<!-- Sidebar Toggle (Topbar) -->
+				<button id="sidebarToggleTop"
+					class="btn btn-link d-md-none rounded-circle mr-3">
+					<i class="fa fa-bars"></i>
+				</button>
+
+
+				<!-- Topbar Navbar -->
+				<ul class="navbar-nav ml-auto">
+
+					<!-- Nav Item - Alerts -->
+					<li class="nav-item dropdown no-arrow mx-1"><a
+						class="nav-link dropdown-toggle" href="#" id="alertsDropdown"
+						role="button" data-toggle="dropdown" aria-haspopup="true"
+						aria-expanded="false"> <i class="fas fa-bell fa-fw"></i> <!-- Counter - Alerts -->
+							<span class="badge badge-danger badge-counter">3+</span>
+					</a> <!-- Dropdown - Alerts -->
+						<div
+							class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
+							aria-labelledby="alertsDropdown">
+							<h6 class="dropdown-header">Alerts Center</h6>
+							<a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="mr-3">
+									<div class="icon-circle bg-primary">
+										<i class="fas fa-file-alt text-white"></i>
+									</div>
+								</div>
+								<div>
+									<div class="small text-gray-500">December 12, 2019</div>
+									<span class="font-weight-bold">A new monthly report is
+										ready to download!</span>
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="mr-3">
+									<div class="icon-circle bg-success">
+										<i class="fas fa-donate text-white"></i>
+									</div>
+								</div>
+								<div>
+									<div class="small text-gray-500">December 7, 2019</div>
+									$290.29 has been deposited into your account!
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="mr-3">
+									<div class="icon-circle bg-warning">
+										<i class="fas fa-exclamation-triangle text-white"></i>
+									</div>
+								</div>
+								<div>
+									<div class="small text-gray-500">December 2, 2019</div>
+									Spending Alert: We've noticed unusually high spending for your
+									account.
+								</div>
+							</a> <a class="dropdown-item text-center small text-gray-500"
+								href="#">Show All Alerts</a>
+						</div></li>
+
+					<!-- Nav Item - Messages -->
+					<li class="nav-item dropdown no-arrow mx-1"><a
+						class="nav-link dropdown-toggle" href="#" id="messagesDropdown"
+						role="button" data-toggle="dropdown" aria-haspopup="true"
+						aria-expanded="false"> <i class="fas fa-envelope fa-fw"></i> <!-- Counter - Messages -->
+							<span class="badge badge-danger badge-counter">7</span>
+					</a> <!-- Dropdown - Messages -->
+						<div
+							class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
+							aria-labelledby="messagesDropdown">
+							<h6 class="dropdown-header">Message Center</h6>
+							<a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="dropdown-list-image mr-3">
+									<img class="rounded-circle"
+										th:src="@{/img/undraw_profile_1.svg}" alt="...">
+									<div class="status-indicator bg-success"></div>
+								</div>
+								<div class="font-weight-bold">
+									<div class="text-truncate">Hi there! I am wondering if
+										you can help me with a problem I've been having.</div>
+									<div class="small text-gray-500">Emily Fowler · 58m</div>
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="dropdown-list-image mr-3">
+									<img class="rounded-circle"
+										th:src="@{/img/undraw_profile_2.svg}" alt="...">
+									<div class="status-indicator"></div>
+								</div>
+								<div>
+									<div class="text-truncate">I have the photos that you
+										ordered last month, how would you like them sent to you?</div>
+									<div class="small text-gray-500">Jae Chun · 1d</div>
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="dropdown-list-image mr-3">
+									<img class="rounded-circle"
+										th:src="@{/img/undraw_profile_3.svg}" alt="...">
+									<div class="status-indicator bg-warning"></div>
+								</div>
+								<div>
+									<div class="text-truncate">Last month's report looks
+										great, I am very happy with the progress so far, keep up the
+										good work!</div>
+									<div class="small text-gray-500">Morgan Alvarez · 2d</div>
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="dropdown-list-image mr-3">
+									<img class="rounded-circle"
+										src="https://source.unsplash.com/Mv9hjnEUHR4/60x60" alt="...">
+
+									<div class="status-indicator bg-success"></div>
+								</div>
+								<div>
+									<div class="text-truncate">Am I a good boy? The reason I
+										ask is because someone told me that people say this to all
+										dogs, even if they aren't good...</div>
+									<div class="small text-gray-500">Chicken the Dog · 2w</div>
+								</div>
+							</a> <a class="dropdown-item text-center small text-gray-500"
+								href="#">Read More Messages</a>
+						</div></li>
+
+					<div class="topbar-divider d-none d-sm-block"></div>
+
+					<!-- Nav Item - User Information -->
+					<li class="nav-item dropdown no-arrow"><a
+						class="nav-link dropdown-toggle" href="#" id="userDropdown"
+						role="button" data-toggle="dropdown" aria-haspopup="true"
+						aria-expanded="false"> <span
+							class="mr-2 d-none d-lg-inline text-gray-600 small">Username</span>
+							<img class="img-profile rounded-circle"
+							th:src="@{/img/undraw_profile.svg}">
+					</a> <!-- Dropdown - User Information -->
+						<div
+							class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+							aria-labelledby="userDropdown">
+							<a class="dropdown-item" href="#"> <i
+								class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> 마이페이지
+							</a> <a class="dropdown-item" href="#"> <i
+								class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i> 화상채팅
+							</a>
+							<div class="dropdown-divider"></div>
+							<a class="dropdown-item" href="#" data-toggle="modal"
+								data-target="#logoutModal"> <i
+								class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+								로그아웃
+							</a>
+						</div></li>
+				</ul>
+			</nav>
+			<nav class="navbar navbar-expand-lg"
+				style="background-color: #f1f3f5; padding-left: 55px; border-bottom: solid 1px #b0bec5">
+				<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+					<ul class="navbar-nav">
+						<li class="nav-item"><a class="nav-link active"
+							aria-current="page" href="../task/kanban"
+							style="font-weight: bold">칸반보드</a></li>
+						<li class="nav-item"><a class="nav-link" href="../task/gantt">간트차트</a></li>
+					</ul>
+
+				</div>
+			</nav>
+			<nav class="navbar navbar-expand-lg" style="padding-left: 55px;">
+				<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+					<ul class="navbar-nav">
+						<li class="nav-item"><a class="nav-link active"
+							aria-current="page" href="../task/kanban"
+							style="font-weight: bold">전체</a></li>
+						<li class="nav-item"><a class="nav-link"
+							href="../task/myAllocateKanban">할당태스크</a></li>
+						<li class="nav-item"><a class="nav-link"
+							href="../task/myChargedKanban">담당태스크</a></li>
+					</ul>
+
+				</div>
+			</nav>
+
+			<div class="parent">
+				<div class="containerBox requested">
+					<div id="requestedTitle">REQUESTED</div>
+					<div class="card m-2 py-3 border-left-warning" draggable="true"
+						th:each="list : ${list}" th:if="${list.task_state == '0'}">
+						<div class="card-body clickTask">
+							<svg xmlns="http://www.w3.org/2000/svg" width="25" height="25"
+								fill="currentColor" class="bi bi-star bookmarkicon"
+								taskseq="${task.task_seq}" viewBox="0 0 16 16">
+									<path
+									d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z" />
+								</svg>
+							<input type="hidden" id="t_seq" th:value="${list.task_seq}">
+							<p>[[${list.task_name}]]</p>
+
+							<div class="profile" th:each="member : ${members}"
+								th:if="${list.task_seq} == ${member.task_seq}">
+								<input type="hidden" id="m_mail" th:value="${member.memb_mail}">
+								<input type="hidden" id="m_name" th:value="${member.memb_name}">
+								<div class="profileBox">
+									<img class="profilePic"
+										th:src="@{/savedImg/}+${member.memb_ogfile}"
+										onerror="this.src='../../img/profile.png'">
+								</div>
+							</div>
+						</div>
+					</div>
+
+				</div>
+				<div class="containerBox inprogress">
+					<div id="progressTitle">IN PROGRESS</div>
+					<div class="card m-2 py-3 border-left-success" draggable="true"
+						th:each="list : ${list}" th:if="${list.task_state == '1'}">
+						<div class="card-body clickTask">
+							<svg xmlns="http://www.w3.org/2000/svg" width="25" height="25"
+								fill="currentColor" class="bi bi-star bookmarkicon"
+								taskseq="${task.task_seq}" viewBox="0 0 16 16">
+									<path
+									d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z" />
+								</svg>
+							<input type="hidden" id="t_seq" th:value="${list.task_seq}">
+							<p>[[${list.task_name}]]</p>
+
+							<div class="profile" th:each="member : ${members}"
+								th:if="${list.task_seq} == ${member.task_seq}">
+								<input type="hidden" id="m_mail" th:value="${member.memb_mail}">
+								<input type="hidden" id="m_name" th:value="${member.memb_name}">
+								<div class="profileBox">
+									<img class="profilePic" th:src="@{/savedImg/}+${member.memb_ogfile}"
+										onerror="this.src='../../img/profile.png'">
+								</div>
+							</div>
+						</div>
+
+					</div>
+				</div>
+				<div class="containerBox done">
+					<div id="doneTitle">DONE</div>
+					<div class="card m-2 py-3 border-left-info" draggable="true"
+						th:each="list : ${list}" th:if="${list.task_state == '2'}">
+						<div class="card-body clickTask">
+							<svg xmlns="http://www.w3.org/2000/svg" width="25" height="25"
+								fill="currentColor" class="bi bi-star bookmarkicon"
+								taskseq="${task.task_seq}" viewBox="0 0 16 16">
+									<path
+									d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z" />
+								</svg>
+
+							<input type="hidden" id="t_seq" th:value="${list.task_seq}">
+							<p>[[${list.task_name}]]</p>
+
+							<div class="profile" th:each="member : ${members}"
+								th:if="${list.task_seq} == ${member.task_seq}">
+								<input type="hidden" id="m_mail" th:value="${member.memb_mail}">
+								<input type="hidden" id="m_name" th:value="${member.memb_name}">
+								<div class="profileBox">
+									<img class="profilePic" th:src="@{/savedImg/}+${member.memb_ogfile}"
+										onerror="this.src='../../img/profile.png'">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="containerBox pending">
+					<div id="pendingTitle">PENDING</div>
+					<div class="card m-2 py-3 border-left-dark" draggable="true"
+						th:each="list : ${list}" th:if="${list.task_state == '3'}">
+						<div class="card-body clickTask" taskSeq="${list.task_seq}">
+							<svg xmlns="http://www.w3.org/2000/svg" width="25" height="25"
+								fill="currentColor" class="bi bi-star bookmarkicon"
+								taskseq="${task.task_seq}" viewBox="0 0 16 16">
+									<path
+									d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z" />
+								</svg>
+							<input type="hidden" id="t_seq" th:value="${list.task_seq}">
+							<p>[[${list.task_name}]]</p>
+
+							<div class="profile" th:each="member : ${members}"
+								th:if="${list.task_seq} == ${member.task_seq}">
+								<input type="hidden" id="m_mail" th:value="${member.memb_mail}">
+								<input type="hidden" id="m_name" th:value="${member.memb_name}">
+								<div class="profileBox">
+									<img class="profilePic" th:src="@{/savedImg/}+${member.memb_ogfile}"
+										onerror="this.src='../../img/profile.png'">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- header 끝 -->
+			<!-- footer 시작 -->
+			<th:block th:replace="fragments/footer :: footerFragment"></th:block>
+			<!-- footer 끝 -->
+		</div>
+	</div>
+
+
+
+
+	<!-- 상세보기 모달 -->
+	<div class="modal fade" id="showTaskModal" tabindex="-1"
+		aria-labelledby="showTaskModalLabel" aria-hidden="true">
+		<form>
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="showTaskModalLabel">태스크 상세보기</h5>
+						<button class="ml-auto mr-2 btn btn-primary">수정</button>
+						<button class="mr-2 btn btn-primary">삭제</button>
+						<button type="button" class="btn-close view-modal-closeBtn"
+							data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+
+						<!-- 신승훈 * 할당자 -->
+						<div class="input-group m-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">할당자</span>
+							</div>
+
+							<input type="text" id="view_task_sender"
+								class="mr-4 form-control" readonly aria-label="Username"
+								aria-describedby="basic-addon1">
+						</div>
+
+						<div class="input-group m-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">담당자</span>
+							</div>
+							<input type="text" class="mr-4 form-control" id="view_staffInput"
+								name="staffs" placeholder="담당자를 추가해주세요" aria-label="Username"
+								value="" aria-describedby="basic-addon1">
+						</div>
+
+						<div class="input-group m-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">제목</span>
+							</div>
+							<input type="text" class="mr-4 form-control" name="task_name"
+								id="view_task_name" readonly placeholder="태스크 제목을 입력하세요"
+								aria-label="Username" required aria-describedby="basic-addon1">
+						</div>
+
+						<div class="input-group m-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">우선순위</span>
+							</div>
+							<div class="btn-group btn-group-toggle" data-toggle="buttons">
+								<label class="btn btn-outline-info view_task_rank_label"
+									for="view_task_rank_0"> <input type="radio"
+									name="view_task_rank" id="view_task_rank_0"
+									class="radioSelection" value="0"> 낮음
+								</label> <label class="btn btn-outline-info view_task_rank_label"
+									for="view_task_rank_1"> <input type="radio"
+									name="view_task_rank" id="view_task_rank_1"
+									class="radioSelection" value="1">보통
+								</label> <label class="btn btn-outline-info view_task_rank_label"
+									for="view_task_rank_2"> <input type="radio"
+									name="view_task_rank" id="view_task_rank_2"
+									class="radioSelection" value="2"> 높음
+								</label>
+							</div>
+						</div>
+
+						<div class="input-group m-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">진행도</span>
+							</div>
+							<div class="btn-group btn-group-toggle" data-toggle="buttons">
+								<label class="btn btn-outline-secondary view_task_state_label"
+									for="view_task_state_0"> <input type="radio"
+									name="view_task_state" id="view_task_state_0"
+									class="radioSelection" value="0"> 진행전
+								</label> <label class="btn btn-outline-secondary view_task_state_label"
+									for="view_task_state_1"> <input type="radio"
+									name="view_task_state" id="view_task_state_1"
+									class="radioSelection" value="1"> 진행중
+								</label> <label class="btn btn-outline-secondary view_task_state_label"
+									for="view_task_state_2"> <input type="radio"
+									name="view_task_state" id="view_task_state_2"
+									class="radioSelection" value="2"> 완료
+								</label> <label class="btn btn-outline-secondary view_task_state_label"
+									for="view_task_state_3"> <input type="radio"
+									name="view_task_state" id="view_task_state_3"
+									class="radioSelection" value="3"> 보류
+								</label>
+							</div>
+						</div>
+
+						<div class="input-group m-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">예상시작일</span> <input type="radio"
+									class="ml-3" id="startNone" name="view_chk_startDate" value="0"
+									checked="checked"><span class="mt-2 ml-1">없음</span> <input
+									type="radio" class="ml-3" id="startExist1"
+									name="view_chk_startDate" value="1"><span
+									class="mt-2 ml-1">있음</span> <input id="datepicker3"
+									class="ml-3 mt-2" width="150" name="exp_startdate"
+									style="margin-left: 20px;" />
+							</div>
+						</div>
+
+						<div class="input-group m-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">예상종료일</span> <input type="radio"
+									class="ml-3" id="endNone" name="view_chk_endDate" value="0"
+									checked="checked"><span class="mt-2 ml-1">없음</span> <input
+									type="radio" class="ml-3" id="endExist2"
+									name="view_chk_endDate" value="1"><span
+									class="mt-2 ml-1">있음</span> <input id="datepicker4"
+									class="ml-3 mt-2" width="150" name="exp_enddate"
+									style="margin-left: 20px;" />
+							</div>
+						</div>
+
+						<!-- 신승훈 * 수행도 -->
+						<div class="slidecontainer" id="view_perform_list"></div>
+
+
+						<div class="input-group m-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">첨부파일</span>
+							</div>
+							<input type="file" class="ml-2 mt-1" onchange="addFile(this);">
+						</div>
+
+						<div class="ml-5">
+							<ul id="fileList" class="ml-4" style="list-style: none;">
+								<li>어쩌구 저쩌구 파일</li>
+							</ul>
+						</div>
+
+						<div class="input-group m-3">
+							<textarea class="mr-4 form-control" name="task_content"
+								id="view_task_content" readonly style="resize: none;" rows="5">내용을 입력하세요</textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+	<!-- 상세보기 모달창 끝 -->
+
+
+
+
+
+
+	<script th:inline="javascript">
+	$(document).ready(function () {
+		let taskList = [[${list}]];
+		let mList = [[${members}]];
+		
+		$('.view-modal-closeBtn').click(function() {
+			$('#showTaskModal').modal('hide');
+		});
+		
+		createMembers(mList);
+	});
+	
+
+	
+	let members = new Map();
+	
+	function createMembers(memberList) {
+		
+		for(let member of memberList){
+			members.set(member.memb_mail, member);
+		}
+		console.log(members);
+	}
+	
+	
+	/*칸반보드 드래그 앤 드롭 이벤트*/
+	
+	//어떤 컨테이너에 떨어졌는지
+	let where = null;
+	
+	//각 카드 요소들
+	const draggables = document.querySelectorAll(".card");
+	console.log(draggables);
+	
+	//컨테이너들
+	const containers = document.querySelectorAll(".containerBox");
+	
+	const requested = document.querySelector(".requested");
+	const inprogress = document.querySelector(".inprogress");
+	const done = document.querySelector(".done");
+	const pending = document.querySelector(".pending");
+	
+	containers.forEach((containerBox) => {
+		new Sortable(containerBox, {
+			group : "shared",
+			animation : 150
+		})	
+	})
+	
+	//태스크에 이벤트 리스너 달아주기
+	draggables.forEach(draggable => {
+		//dragstart : 드래그를 시작할 때 발생하는 이벤트
+		draggable.addEventListener("dragstart", () => {
+			console.log('드래그 시작');
+			//드래그가 시작되면 해당 요소에 dragging이라는 클래스명을 추가시킨다.
+			draggable.classList.add("dragging");
+					
+		});
+		
+		//dragend : 드래그하다가 마우스를 놓는 순간 발생하는 이벤트
+		draggable.addEventListener("dragend", () => {
+			console.log('드래그 종료');
+			//드래그가 끝나면 dragging 클래스 삭제
+			draggable.classList.remove("dragging");
+		});
+	});
+	
+	//진행전 이벤트
+	requested.addEventListener("dragover", (e) => {
+		e.preventDefault();
+	});
+	
+	requested.addEventListener("drop", (e) => {
+		e.preventDefault();
+		
+		let dragging = $(".dragging").find('input').val();
+		console.log(dragging);
+		
+		if($(".dragging").hasClass("border-left-dark")){
+			$(".dragging").removeClass("border-left-dark");
+			$(".dragging").addClass("border-left-warning");
+		} else if($(".dragging").hasClass("border-left-success")){
+			$(".dragging").removeClass("border-left-success");
+			$(".dragging").addClass("border-left-warning");
+		} else if($(".dragging").hasClass("border-left-info")){
+			$(".dragging").removeClass("border-left-info");
+			$(".dragging").addClass("border-left-warning");
+		}
+		
+		console.log("requested drop & ajax 호출");
+		
+		where = 0;
+		
+		$.ajax({
+			url : "changeState",
+			type : "POST",
+			data : {
+				task_state : where,
+				task_seq : dragging
+			},
+			dataType : 'json',
+			success : function(){
+				alert('requested 변경 완료');
+			}
+		});
+	});
+	
+	//진행중
+	inprogress.addEventListener("dragover", (e) => {
+		e.preventDefault();
+	});
+	
+	inprogress.addEventListener("drop", (e) => {
+		e.preventDefault();
+		
+		let dragging = $(".dragging").find('input').val();
+		console.log(dragging);
+		
+		if($(".dragging").hasClass("border-left-dark")){
+			$(".dragging").removeClass("border-left-dark");
+			$(".dragging").addClass("border-left-success");
+		} else if($(".dragging").hasClass("border-left-warning")){
+			$(".dragging").removeClass("border-left-warning");
+			$(".dragging").addClass("border-left-success");
+		} else if($(".dragging").hasClass("border-left-info")){
+			$(".dragging").removeClass("border-left-info");
+			$(".dragging").addClass("border-left-success");
+		}
+		
+		console.log("inprogress drop & ajax 호출");
+		
+		where = 1;
+		
+		$.ajax({
+			url : "changeState",
+			type : "POST",
+			data : {
+				task_state : where,
+				task_seq : dragging
+			},
+			dataType : 'json',
+			success : function(){
+				alert('requested 변경 완료');
+			}
+		});
+	});
+	
+	//완료
+	done.addEventListener("dragover", (e) => {
+		e.preventDefault();
+	});
+	
+	done.addEventListener("drop", (e) => {
+		e.preventDefault();
+		
+		let dragging = $(".dragging").find('input').val();
+		console.log(dragging);
+		
+		if($(".dragging").hasClass("border-left-dark")){
+			$(".dragging").removeClass("border-left-dark");
+			$(".dragging").addClass("border-left-info");
+		} else if($(".dragging").hasClass("border-left-warning")){
+			$(".dragging").removeClass("border-left-warning");
+			$(".dragging").addClass("border-left-info");
+		} else if($(".dragging").hasClass("border-left-dark")){
+			$(".dragging").removeClass("border-left-dark");
+			$(".dragging").addClass("border-left-info");
+		}
+		
+		console.log("done drop & ajax 호출");
+		
+		where = 2;
+		
+		$.ajax({
+			url : "changeState",
+			type : "POST",
+			data : {
+				task_state : where,
+				task_seq : dragging
+			},
+			dataType : 'json',
+			success : function(){
+				alert('requested 변경 완료');
+			}
+		});
+	});
+	
+	//보류중
+	pending.addEventListener("dragover", (e) => {
+		e.preventDefault();
+	});
+	
+	pending.addEventListener("drop", (e) => {
+		e.preventDefault();
+		
+		let dragging = $(".dragging").find('input').val();
+		console.log(dragging);
+		
+		if($(".dragging").hasClass("border-left-warning")){
+			$(".dragging").removeClass("border-left-warning");
+			$(".dragging").addClass("border-left-dark");
+		} else if($(".dragging").hasClass("border-left-success")){
+			$(".dragging").removeClass("border-left-success");
+			$(".dragging").addClass("border-left-dark");
+		} else if($(".dragging").hasClass("border-left-info")){
+			$(".dragging").removeClass("border-left-info");
+			$(".dragging").addClass("border-left-dark");
+		}
+		
+		
+		console.log("pending drop & ajax 호출");
+		
+		where = 3;
+		
+		$.ajax({
+			url : "changeState",
+			type : "POST",
+			data : {
+				task_state : where,
+				task_seq : dragging
+			},
+			dataType : 'json',
+			success : function(){
+				alert('requested 변경 완료');
+			}
+		});
+	});
+	
+	$(".profile").hover(function(){
+		let memb_mail = $(this).find("#m_mail").val();
+		let memb_name = $(this).find("#m_name").val();
+
+		$(this).find(".profileBox").css('border', '3px solid #727272');
+		
+		$(this).append(
+			'<span class="membInfo">'+ memb_name + '  ' + memb_mail + '</span>'		
+		);
+	}, function(){
+		$(this).find(".profileBox").css('border', 'none');
+		$(".membInfo").remove();
+	});
+	/*
+	//컨테이너에 이벤트 리스너 달아주기
+	containers.forEach(containers => {
+		//드래그하면서 마우스가 대상 객체의 영역 위에 자리 잡고 있을 때 발생하는 이벤트
+		containers.addEventListener("dragover", e => {
+			//기본으로 정의된 이벤트(다른 요소 위에 얹을 수 없다...?)가 작동하지 못하게 막는다.
+			e.preventDefault();
+			
+			const afterElement = getDragAfterElement(containers, e.clientY)
+			console.log(afterElement);
+			
+			//드래그하는 요소가 해당 컨테이너 위에 있을 경우 자식으로 이어붙인다.
+			const draggable = document.querySelector(".dragging");
+			containers.appendChild(draggable);
+			
+		});
+	});
+	
+	//드래그하는 요소가 다른 요소 사이에 들어가도록 구현, 즉 정확한 위치를 잡아주기 위한 함수
+	function getDragAfterElement(containers, y){
+				
+		//draggableElements 배열에 현재 컨테이너에서 드래그하고 있는 모든 요소를 담는다.
+		//draggable:not(.dragging) -> 현재 드래그하고 있는 요소도 포함시키고자 함.
+		//... : array로 리턴해주기 위함.
+		
+		const draggableElements = [...containers.querySelectorAll('.card:not(.dragging)')]
+		
+		console.log(draggableElements);
+		
+		//reduce의 역할 : 배치시킬 정확한 요소 하나를 찾아내고자 함!
+		return draggableElements.reduce(
+			//closest : 현재 드래그하고 있는 요소와 가장 가까운 요소 하나, 어떤 요소가 마우스 커서 바로 뒤에 있나
+			(closest, child) => {
+				//DOM 엘리먼트의 위치를 구해 box 변수에 담는다
+				const box = child.getBoundingClientRect();
+				console.log(box);
+				
+				const offset = y - box.top - box.height / 2;
+				console.log(offset);
+				
+				if(offset < 0 && offset > closest.offset) {
+					return {offset : offset, element : child}
+				} else {
+					return closest
+				}
+			},
+			{offset : Number.NEGATIVE_INFINITY},
+		).element
+	}
+	*/
+	
+	
+	/*태스크 상세조회 */
+	$(".clickTask").click(showTaskModalControlFunc); 
+	
+	function showTaskModalControlFunc(event){
+		
+		$("#showTaskModal").modal("show");
+		
+		$.ajax({
+			url: 'showTaskModal',
+			type: 'post',
+			data: { taskSeq: $(this).children('#t_seq').val() },
+			dataType: 'JSON',
+			success: function(result) {
+				console.log(members.get(result.showTask.task_sender));
+				// 신승훈 * 태스크 상세보기 정보 세팅
+				$('#view_task_sender').val(members.get(result.showTask.task_sender).memb_name + " " + result.showTask.task_sender);
+				$('#view_task_name').val(result.showTask.task_name);
+				
+				let staffListStr = '';
+				if(result.showStaff != null){
+					for(let staff of result.showStaff){
+						if(staffListStr === '')
+							staffListStr += members.get(staff.memb_mail).memb_name+"("+staff.memb_mail+")";
+						else
+							staffListStr += ", " + members.get(staff.memb_mail).memb_name+"("+staff.memb_mail+")";
+					}
+				}
+				$('#view_staffInput').val(staffListStr);
+				
+				console.log('result.showTask.task_rank');
+				let viewRankId = $(':radio[name=view_task_rank][value="' + result.showTask.task_rank + '"]').attr('id');
+				$(`#${viewRankId}`).attr('checked', true);
+				$('.view_task_rank_label').removeClass("active");
+				$(`label[for='${viewRankId}']`).addClass("active");
+				
+				let viewRadioId2 = $(':radio[name=view_task_state][value="' + result.showTask.task_state + '"]').attr('id');
+				console.log(viewRadioId2);
+				$(`#${viewRadioId2}`).attr('checked', true);
+				$('.view_task_state_label').removeClass("active");
+				$(`label[for='${viewRadioId2}']`).addClass("active");
+				
+				let isEmptyStartDate;
+				if(result.showTask.exp_startdate == null)
+					isEmptyStartDate = 0;
+				else
+					isEmptyStartDate = 1;
+				
+				$(':radio[name=view_chk_startDate][value="' + isEmptyStartDate + '"]').attr('checked', true);
+				if(isEmptyStartDate == 1){
+	/* 				$("#datepicker3").show();
+					$('#datepicker3').datepicker();
+					$(".gj-icon").show();
+					 */
+					let year = result.showTask.exp_startdate.substr(0, 4);
+					let month = result.showTask.exp_startdate.substr(5, 2);
+					let day = result.showTask.exp_startdate.substr(8, 2);
+					
+					$('#datepicker3').val(month+"/"+day+"/"+year);
+				}/* else {
+					$("#datepicker3").hide();
+					$(".gj-icon").hide();
+				} */
+				
+				let isEmptyEndDate;
+				if(result.showTask.exp_enddate == null)
+					isEmptyEndDate = 0;
+				else
+					isEmptyEndDate = 1;
+				
+				$(':radio[name=view_chk_endDate][value="' + isEmptyEndDate + '"]').attr('checked', true);
+				if(isEmptyEndDate == 1){
+	/* 				$("#datepicker4").show();
+					$('#datepicker4').datepicker();
+					$(".gj-icon").show();
+					 */
+					let year = result.showTask.exp_enddate.substr(0, 4);
+					let month = result.showTask.exp_enddate.substr(5, 2);
+					let day = result.showTask.exp_enddate.substr(8, 2);
+					
+					$('#datepicker4').val(month+"/"+day+"/"+year);
+				}else {
+/* 					$("#datepicker4").hide();
+					$(".gj-icon").hide(); */
+				}
+				
+				$('#view_task_content').val(result.showTask.task_content);
+				
+				let performHTML = '<span class="input-group-text" style="justify-content:center; margin-left:15px; margin-bottom:10px; width:100px;">수행도</span> <ul>';
+				let performIndex = 0;
+				if(result.showStaff != null)
+					for(let staff of result.showStaff){
+						if(staff.memb_mail === [[${#authentication.name}]])
+							performHTML += `<li>${members.get(staff.memb_mail).memb_name} <input type="range" class="view_tsuper_perform" id="perform_${performIndex}" taskSeq="${result.showTask.task_seq}" min="0" max="4" style="width: 250px;"></li>`;
+						else 
+							performHTML += `<li>${members.get(staff.memb_mail).memb_name} <input type="range" class="view_tsuper_perform" id="perform_${performIndex}" taskSeq="${result.showTask.task_seq}" min="0" max="4" style="width: 250px;" disabled></li>`;
+						performIndex++;
+					}
+				performHTML += "</ul>";
+				
+				$('#view_perform_list').html(performHTML);
+				for(let i=0 ; i<performIndex ; i++){
+					$('#perform_'+i).val(result.showStaff[i].tsuper_perform/25);
+				}
+				
+				fileListHTML = '';
+				let link = [[@{/}]];
+				for(let file of result.taskFileList){
+					fileListHTML += `<li><a href="${link}${result.showTask.prj_domain}/task/download?fileSeq=${file.tfile_seq}">${file.tfile_ogfile}</a></li>`;
+				}
+				$('#fileList').html(fileListHTML);
+				
+				$('.view_tsuper_perform').change(tsuper_perform_change);
+				
+				// 첨부파일 $("#basic_addon_8").val(result.showTask.);
+			},
+			error: function() {
+				alert('showTaskModal error');
+			}
+		});
+	}
+	
+	
+	
+</script>
+</body>
+</html>

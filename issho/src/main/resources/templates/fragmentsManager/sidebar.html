@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/config :: configFragment">
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<!-- Custom styles for this template
+<link href="css/sb-admin-2.min.css" rel="stylesheet">-->
+
+<script>
+$(function() {
+		alert('aa');
+		$("#sidebarToggle, #sidebarToggleTop").on('click', function(e) {
+			$("body").toggleClass("sidebar-toggled");
+			$(".sidebar").toggleClass("toggled");
+			if ($(".sidebar").hasClass("toggled")) {
+				$('.sidebar .collapse').collapse('hide');
+			}
+			;
+		});
+
+	})
+</script>
+
+
+</head>
+<body>
+	<!-- Sidebar -->
+	<div th:fragment="sidebar">
+		<ul
+			class="navbar-nav bg-gradient-dark sidebar sidebar-dark accordion"
+			id="accordionSidebar">
+
+			<!-- Sidebar - Brand -->
+			<a
+				class="sidebar-brand d-flex align-items-center justify-content-center"
+				th:href="|@{/}${session.prj_domain}/manager/member|">
+				<div class="sidebar-brand-icon rotate-n-15">
+					<i class="fas fa-laugh-wink"></i>
+				</div>
+				<div class="sidebar-brand-text mx-3">관리자 페이지</div>
+			</a>
+			
+			
+			<!-- Divider -->
+			<hr class="sidebar-divider my-0">
+			<!-- ISSHO HOME Item - Dashboard -->
+			<li class="nav-item active"><a class="nav-link"
+				th:href="|@{/}${session.prj_domain}/main|"> <i class="fas fa-fw fa-tachometer-alt"></i> <span>ISSHO
+						HOME</span></a></li>
+
+			<!-- Divider -->
+			<hr class="sidebar-divider">
+
+			<!-- 구성원관리 Item -->
+			<li class="nav-item"><a class="nav-link" th:href="|@{/}${session.prj_domain}/manager/member|">
+					<i class="fas fa-fw fa-chart-area"></i> <span>구성원 관리</span>
+			</a></li>
+
+			<!-- 초대관리 Item -->
+			<li class="nav-item"><a class="nav-link" th:href="|@{/}${session.prj_domain}/manager/invitation|">
+					<i class="fas fa-fw fa-chart-area"></i> <span>초대 관리</span>
+			</a></li>
+
+			<!-- 업무관리 Item -->
+			<li class="nav-item"><a class="nav-link" th:href="|@{/}${session.prj_domain}/manager/works|">
+					<i class="fas fa-fw fa-chart-area"></i> <span>업무 관리</span>
+			</a></li>
+			
+			
+			
+			<!-- 프로젝트관리 Item -->
+			<li class="nav-item"><a class="nav-link" th:href="|@{/}${session.prj_domain}/manager/project|">
+					<i class="fas fa-fw fa-chart-area"></i> <span>프로젝트 관리</span>
+			</a></li>
+
+
+			<!-- Divider -->
+			<hr class="sidebar-divider d-none d-md-block">
+
+			<!-- Sidebar Toggler (Sidebar) -->
+			<div class="text-center d-none d-md-inline">
+				<button class="rounded-circle border-0" id="sidebarToggle"></button>
+			</div>
+
+		</ul>
+		<!-- End of Sidebar -->
+	</div>
+	<!-- End of Sidebar -->
+
+</body>
+</html>

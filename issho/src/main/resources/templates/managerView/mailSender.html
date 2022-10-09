@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+
+<!-- CSS only -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+<!-- JavaScript Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8" crossorigin="anonymous"></script>
+<script>
+</script>
+</head>
+<body>
+
+	<div class="modal modal-signin position-static d-block bg-secondary py-5" tabindex="-1" role="dialog" id="modalSignin">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content rounded-4 shadow">
+      <div class="modal-header p-5 pb-4 border-bottom-0">
+        <h2 class="fw-bold mb-0">멤버 초대</h2>
+
+      </div>
+
+      <div class="modal-body p-5 pt-0">
+        <form th:action="@{/manager/mailSender2}" id="mailForm" method="post" >
+          <div class="form-floating mb-3">
+            <input type="text" name="prj_domain" class="form-control rounded-3" id="prj_domain" placeholder="Project name">
+            <label for="floatingInpu">Project Name</label>
+          </div>
+          <div class="form-floating mb-3">
+            <input type="email" name="membInv_recipient" class="form-control rounded-3" id="membInv_recipient" placeholder="name@example.com">
+            <label for="floatingInput">Email address</label>
+        
+          </div>
+          <button class="w-100 mb-2 btn btn-lg rounded-3 btn-primary" type="button" onclick="submitForm()">전송</button>
+			<div id="idVal"></div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showPop() {
+
+    console.log('showPop 실행');
+
+    window.open("multiRoom/chatHome", "메신저",
+          "width=500, height=700, top=10, left=10");
+ }
+
+
+function submitForm(){
+	let membInv_recipient = $("#membInv_recipient").val();
+	let prj_domain = $("#prj_domain").val();
+	
+	let form = $("#mailForm");
+	
+	console.log(form);
+	
+	$.ajax({
+		url : "mailIdCheck",
+		type : "POST",
+		data : {
+			membInv_recipient : membInv_recipient,
+			prj_domain : prj_domain
+		},
+		dataType : 'json',
+		success : function(result) {
+			if (result == 0) {
+				$('#mailForm').submit();
+					 setTimeout(function() {   
+				           window.close();
+				          }, 500); 
+				
+			} else {
+				alert("이미 초대한 이메일입니다.")
+			}
+		}
+	});
+}
+
+
+	
+</script>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+</body>
+</html>

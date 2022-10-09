@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="net.softsociety.issho.manager.dao.ManagerDAO">
+
+	<select id="listMembers" parameterType="Map"
+		resultType="Members">
+		SELECT
+		m.memb_mail as memb_mail
+		,m.memb_name as memb_name
+		,m.memb_ogfile
+		as memb_ogfile
+		,m.memb_savedfile as memb_savedfile
+		,m.memb_work as
+		memb_work
+		,m.memb_phone as memb_phone
+		,p.prj_domain as prj_domain
+		,p.pjmb_right as pjmb_right
+		FROM
+		members m, projectmember p
+		where
+		m.memb_mail = p.memb_mail
+		AND p.prj_domain = #{prj_domain}
+		<if test="searchWord != null">
+			AND memb_name like '%' || #{searchWord} || '%'
+		</if>
+		order by
+		1 desc
+	</select>
+
+
+	<select id="listMembers2" parameterType="Map"
+		resultType="Members">
+		SELECT
+		m.memb_mail as memb_mail
+		,m.memb_name as memb_name
+		,m.memb_ogfile as memb_ogfile
+		,m.memb_savedfile as memb_savedfile
+		,m.memb_work as memb_work
+		,m.memb_phone as memb_phone
+		,p.prj_domain as
+		prj_domain
+		,p.pjmb_right as pjmb_right
+		FROM
+		members m, projectmember p
+		where
+		m.memb_mail = p.memb_mail
+		AND p.prj_domain = #{domain}
+		AND p.memb_mail = #{email}
+		order by
+		1 desc
+	</select>
+
+	<select id="count" parameterType="Map" resultType="int">
+		select
+		count(*)
+		from members
+		<where>
+			<if test="searchWord != null">
+				memb_name like '%' || #{searchWord} || '%'
+			</if>
+		</where>
+	</select>
+
+	<select id="getMemberInfo" parameterType="String"
+		resultType="Members">
+		SELECT
+		m.memb_mail as memb_mail
+		,m.memb_name as memb_name
+		,m.memb_ogfile as memb_ogfile
+		,m.memb_savedfile as memb_savedfile
+		,m.memb_work as memb_work
+		,m.memb_phone as memb_phone
+		,p.prj_domain as
+		prj_domain
+		,p.pjmb_right as pjmb_right
+		FROM
+		members m, projectmember p
+		WHERE m.memb_mail = p.memb_mail
+		AND p.prj_domain = #{prj_domain}
+	</select>
+
+
+	<insert id="insertAttendant" parameterType="Members">
+	INSERT INTO projectmember
+     (prj_domain,memb_mail,pjmb_right)
+     values
+     (#{prj_domain},#{memb_mail},'member')
+	</insert>
+	
+	<insert id="insertInvitaion" parameterType="InvitationMember">
+		INSERT INTO invitation
+		(membInv_seq,prj_domain,membInv_recipient,membinv_accept)
+		VALUES
+		(membInv_seq.nextval,#{prj_domain},#{membInv_recipient},'')
+	</insert>
+	
+
+	<!-- 초대 멤버 검색 -->
+	<select id="invitationIdSearchOne"
+		parameterType="InvitationMember" resultType="int">
+		SELECT COUNT(*)
+		FROM
+		invitation
+		WHERE membInv_recipient = #{membInv_recipient}
+		and prj_domain
+		= #{prj_domain}
+	</select>
+
+	<select id="getOneObject" parameterType="InvitationMember"
+		resultType="InvitationMember">
+		SELECT *
+		FROM invitation
+		WHERE membInv_recipient =
+		#{membInv_recipient}
+		and prj_domain
+		= #{prj_domain}
+	</select>
+
+	<!-- 초대 여부 업데이트 -->
+	<update id="updateAccept" parameterType="InvitationMember">
+		UPDATE invitation
+		SET
+		membinv_accept = 1
+		WHERE prj_domain = #{prj_domain}
+		AND
+		membInv_recipient = #{membInv_recipient}
+	</update>
+
+	<select id="listDriveFile" parameterType="Map"
+		resultType="DriveFile">
+		select
+		driveFile_seq
+		,driveFile_ogFile
+		,driveFile_saveFile
+		,driveFile_date
+		from driveFile
+		<where>
+			<if test="searchWord != null">
+				driveFile_ogFile like '%' || #{searchWord} || '%'
+			</if>
+		</where>
+		order by
+		1 desc
+	</select>
+
+	<insert id="insertDrive" parameterType="DriveFile">
+		insert into
+		driveFile
+		(
+		driveFile_seq
+		<if test="driveFile_ogFile != null and driveFile_saveFile != null">
+			,driveFile_ogFile
+			,driveFile_saveFile
+		</if>
+		)
+		values
+		(
+		driveFile_seq.nextval
+		<if test="driveFile_ogFile != null and driveFile_saveFile != null">
+			,#{driveFile_ogFile}
+			,#{driveFile_saveFile}
+		</if>
+		)
+	</insert>
+
+	<select id="getPrjMem" parameterType="ProjectMember"
+		resultType="ProjectMember">
+		SELECT * FROM projectmember
+		WHERE prj_domain = #{prj_domain}
+		AND memb_mail = #{memb_mail}
+	</select>
+	
+	<insert id="insertPrjMem" parameterType="ProjectMember">
+		INSERT INTO projectmember
+		VALUES(#{prj_domain}, #{memb_mail}, #{pjmb_right})
+	</insert>
+
+	<!-- 게시물 읽기 -->
+	<select id="readDriveFile" resultType="DriveFile"
+		parameterType="int">
+		select
+		*
+		from
+		driveFile
+		where
+		driveFile_seq = #{driveFile_seq}
+	</select>
+	
+	
+	<!-- 업무관리 리스트 -->
+	<select id="listWork" parameterType="String"
+		resultType="MemberTemp">
+		WITH temp AS
+		(SELECT memb_mail, COUNT(memb_mail) AS cnt
+		FROM taskstaff s
+		GROUP BY memb_mail
+		),
+		donetemp AS
+		(SELECT t.prj_domain AS prj_domain,s.memb_mail AS donemail, COUNT(t.task_state) as donecnt
+		FROM taskstaff s, task t
+		WHERE s.task_seq = t.task_seq
+		AND t.task_state = 2
+		AND t.prj_domain = #{prj_domain}
+		GROUP BY s.memb_mail,t.prj_domain
+		)
+		SELECT prj_domain as prj_domain, donemail as memb_mail, TRUNC((donecnt/cnt) * 100) AS performance
+		FROM temp t, donetemp d
+		WHERE d.donemail = t.memb_mail
+	</select>
+	
+	<!--멤버 권한 변경 -->
+	<update id="editMembRight" parameterType="Members">
+		UPDATE projectmember
+		SET pjmb_right = 'member'
+		where
+			memb_mail=#{memb_mail}
+	</update>
+	<!--매니저 권한 변경 -->
+	<update id="editPMRight" parameterType="Members">
+		UPDATE projectmember
+		SET pjmb_right = 'PM'
+		where
+			memb_mail=#{memb_mail}
+	</update>
+	
+	<select id="taskCnt" parameterType="String"
+		resultType="TaskCnt">
+		SELECT s.memb_mail as memb_mail, COUNT(t.task_seq) as taskCnt
+		FROM taskstaff s, task t
+		WHERE s.task_seq = t.task_seq
+		AND s.memb_mail = #{memb_mail}
+		GROUP BY s.memb_mail
+	</select>
+	
+	
+	<select id="taskCntDone" parameterType="String"
+		resultType="TaskCntDone">
+		SELECT s.memb_mail as memb_mail, COUNT(t.task_seq) as taskCntDone
+		FROM taskstaff s, task t
+		WHERE s.task_seq = t.task_seq
+		AND s.memb_mail = #{memb_mail}
+		AND t.task_state = 2
+		GROUP BY s.memb_mail
+	</select>
+	
+	
+	<select id="listInvitation" parameterType="Map"
+		resultType="Members">
+		SELECT
+		m.memb_mail as memb_mail
+		,m.memb_name as memb_name
+		,m.memb_ogfile
+		as memb_ogfile
+		,m.memb_savedfile as memb_savedfile
+		,m.memb_work as
+		memb_work
+		,m.memb_phone as memb_phone
+		,p.prj_domain as prj_domain
+		,p.pjmb_right as pjmb_right
+		,i.membInv_accept as membInv_accept
+		FROM
+		members m, projectmember p, invitation i
+		where
+		m.memb_mail = p.memb_mail
+		AND m.memb_mail = i.membInv_recipient(+)
+		AND p.prj_domain = #{prj_domain}
+		<if test="searchWord != null">
+			AND memb_name like '%' || #{searchWord} || '%'
+		</if>
+		order by
+		1 desc
+	</select>
+	
+	
+	<select id="taskState" parameterType="String"
+		resultType="TaskState">
+		WITH temp AS
+		(SELECT COUNT(task_seq) AS cnt
+		FROM taskstaff s
+		WHERE s.memb_mail = #{memb_mail}
+		),
+requested AS
+        (SELECT COUNT(t.task_seq) AS req
+        FROM taskstaff s, task t
+        WHERE t.task_seq = s.task_seq
+        AND s.memb_mail = #{memb_mail}
+        AND t.task_state = 0
+        ),
+progress AS
+        (SELECT COUNT(t.task_seq) AS pro
+        FROM taskstaff s, task t
+        WHERE t.task_seq = s.task_seq
+        AND s.memb_mail = #{memb_mail}
+        AND t.task_state = 1
+        ),
+don AS 
+        (SELECT COUNT(t.task_seq) AS d
+        FROM taskstaff s, task t
+        WHERE t.task_seq = s.task_seq
+        AND s.memb_mail = #{memb_mail}
+        AND t.task_state = 2
+        ),
+pending AS (SELECT COUNT(t.task_seq) AS pen
+        FROM taskstaff s, task t
+        WHERE t.task_seq = s.task_seq
+        AND s.memb_mail = #{memb_mail}
+        AND t.task_state = 3
+        )
+SELECT ROUND((requested.req/temp.cnt),1)*100 AS requested, ROUND((progress.pro/temp.cnt),1)*100 AS progress, ROUND((don.d/temp.cnt),1)*100 AS done, ROUND((pending.pen/temp.cnt),1)*100 AS pending
+FROM temp, requested, progress, don, pending
+	</select>
+	
+	
+	<!-- 업무관리 리스트 -->
+	<select id="listWorkEx" parameterType="String"
+		resultType="MemberTemp">
+        WITH temp AS
+		(SELECT COUNT(task_seq) AS cnt
+		FROM taskstaff s
+		WHERE s.memb_mail = #{memb_mail}
+		),
+requested AS
+        (SELECT COUNT(t.task_seq) AS req
+        FROM taskstaff s, task t
+        WHERE t.task_seq = s.task_seq
+        AND s.memb_mail = #{memb_mail}
+        AND t.task_state = 0
+        ),
+progress AS
+        (SELECT COUNT(t.task_seq) AS pro
+        FROM taskstaff s, task t
+        WHERE t.task_seq = s.task_seq
+        AND s.memb_mail = #{memb_mail}
+        AND t.task_state = 1
+        ),
+don AS 
+        (SELECT COUNT(t.task_seq) AS d
+        FROM taskstaff s, task t
+        WHERE t.task_seq = s.task_seq
+        AND s.memb_mail = #{memb_mail}
+        AND t.task_state = 2
+        ),
+pending AS (SELECT COUNT(t.task_seq) AS pen
+        FROM taskstaff s, task t
+        WHERE t.task_seq = s.task_seq
+        AND s.memb_mail = #{memb_mail}
+        AND t.task_state = 3
+        ),
+memb_name AS(
+        SELECT
+		memb_name
+		FROM
+		members
+		where
+		memb_mail = #{memb_mail}
+),
+donetemp AS
+    (SELECT t.prj_domain AS prj_domain,s.memb_mail AS donemail, COUNT(t.task_state) as donecnt
+    FROM taskstaff s, task t
+    WHERE s.task_seq = t.task_seq
+    AND t.task_state = 2
+    AND s.memb_mail = #{memb_mail}
+    GROUP BY s.memb_mail,t.prj_domain
+    ),
+taskCnt AS
+	(SELECT COUNT(t.task_seq) as taskCnt
+		FROM taskstaff s, task t
+		WHERE s.task_seq = t.task_seq
+		AND s.memb_mail = #{memb_mail}
+		GROUP BY s.memb_mail
+	),
+taskCntDone AS	
+		(SELECT COUNT(t.task_seq) as taskCntDone
+		FROM taskstaff s, task t
+		WHERE s.task_seq = t.task_seq
+		AND s.memb_mail = #{memb_mail}
+		AND t.task_state = 2
+		GROUP BY s.memb_mail	
+	    )
+SELECT memb_name,
+ROUND((requested.req/temp.cnt),1)*100 AS requested, 
+ROUND((progress.pro/temp.cnt),1)*100 AS progress, 
+ROUND((don.d/temp.cnt),1)*100 AS done, 
+ROUND((pending.pen/temp.cnt),1)*100 AS pending,
+TRUNC((donecnt/cnt) * 100) AS performance,
+taskCnt,
+taskCntDone
+FROM temp, requested, progress, don, pending,memb_name,donetemp,taskCnt,taskCntDone
+	</select>	
+
+	
+		<select id="taskStateMap" parameterType="String"
+		resultType="MemberTemp">
+		WITH temp AS
+		(SELECT COUNT(task_seq) AS cnt
+		FROM taskstaff s
+		WHERE s.memb_mail = #{memb_mail}
+		),
+requested AS
+        (SELECT COUNT(t.task_seq) AS req
+        FROM taskstaff s, task t
+        WHERE t.task_seq = s.task_seq
+        AND s.memb_mail = #{memb_mail}
+        AND t.task_state = 0
+        ),
+progress AS
+        (SELECT COUNT(t.task_seq) AS pro
+        FROM taskstaff s, task t
+        WHERE t.task_seq = s.task_seq
+        AND s.memb_mail = #{memb_mail}
+        AND t.task_state = 1
+        ),
+don AS 
+        (SELECT COUNT(t.task_seq) AS d
+        FROM taskstaff s, task t
+        WHERE t.task_seq = s.task_seq
+        AND s.memb_mail = #{memb_mail}
+        AND t.task_state = 2
+        ),
+pending AS (SELECT COUNT(t.task_seq) AS pen
+        FROM taskstaff s, task t
+        WHERE t.task_seq = s.task_seq
+        AND s.memb_mail = #{memb_mail}
+        AND t.task_state = 3
+        )
+SELECT ROUND((requested.req/temp.cnt),1)*100 AS requested, ROUND((progress.pro/temp.cnt),1)*100 AS progress, ROUND((don.d/temp.cnt),1)*100 AS done, ROUND((pending.pen/temp.cnt),1)*100 AS pending
+FROM temp, requested, progress, don, pending, memb_name
+	</select>
+	
+	
+	<select id="mamberName" parameterType="Map"
+		resultType="MemberTemp">
+		SELECT
+		memb_name
+		FROM
+		members
+		where
+		memb_mail = #{memb_mail}
+	</select>
+	
+	
+	<insert id="insertHelper" parameterType="Helper">
+		INSERT INTO helper
+		(task_seq,memb_mail)
+		values
+		(#{task_seq},#{memb_mail})
+	</insert>
+</mapper>

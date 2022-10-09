@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<th:block th:replace="fragments/config :: head"></th:block>
+<meta charset="UTF-8">
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"
+	integrity="sha512-zYXldzJsDrNKV+odAwFYiDXV2Cy37cwizT+NkuiPGsa9X1dOz04eHvUWVuxaJ299GvcJT31ug2zO4itXBjFx4w=="
+	crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<title>Insert title here</title>
+<style>
+@import
+	url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap')
+	;
+
+.parent {
+	width: 90%;
+	height: 100%;
+	margin: 0 30px;
+	/*margin: 10px auto;
+	margin-top: 30px;*/
+	display: flex;
+}
+
+.profileBox {
+	width: 50px;
+	height: 50px;
+	border-radius: 70px;
+	overflow: hidden;
+	float: left;
+	position: relative;
+}
+
+.profilePic {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	position: absolute;
+	top: 0;
+	left: 0;
+	margin: 0;
+	padding: 0;
+}
+
+.membInfo {
+	background-color: #404040;
+	color: #fff;
+	top: 80%;
+	left: 20%;
+	margin-left: -60px;
+	text-align: center;
+	border-radius: 6px;
+	padding: 5px;
+	position: absolute; /* 절대 위치를 사용 */
+	z-index: 1;
+}
+
+.membInfo:after {
+	content: " ";
+	position: absolute;
+	bottom: 100%; /* At the top of the tooltip */
+	left: 50%;
+	margin-left: -5px;
+	border-width: 5px;
+	border-style: solid;
+	border-color: transparent transparent #404040 transparent;
+}
+
+.requested {
+	flex: 1;
+	width: 25%;
+	background-color: #eeeeee;
+	margin-right: 20px;
+	box-sizing: border-box;
+}
+
+#requestedTitle {
+	font-family: 'Montserrat', sans-serif;
+	color: black;
+	text-align: center;
+	font-size: 18px;
+	padding-top: 15px;
+	font-weight: bold;
+	width: 100%;
+	height: 60px;
+	background-color: #f6c23e;
+	border-radius: 10px 10px 0px 0px;
+	margin-botton: 10px;
+}
+
+.inprogress {
+	flex: 1;
+	width: 25%;
+	background-color: #eeeeee;
+	margin-right: 20px;
+	box-sizing: border-box;
+}
+
+#progressTitle {
+	font-family: 'Montserrat', sans-serif;
+	color: black;
+	text-align: center;
+	font-size: 18px;
+	padding-top: 15px;
+	font-weight: bold;
+	width: 100%;
+	height: 60px;
+	background-color: #1cc88a;
+	border-radius: 10px 10px 0px 0px;
+	color: black;
+	text-align: center;
+	font-size: 18px;
+	padding-top: 15px;
+}
+
+.done {
+	flex: 1;
+	width: 25%;
+	background-color: #eeeeee;
+	margin-right: 20px;
+	box-sizing: border-box;
+}
+
+#doneTitle {
+	font-family: 'Montserrat', sans-serif;
+	color: black;
+	text-align: center;
+	font-size: 18px;
+	padding-top: 15px;
+	font-weight: bold;
+	width: 100%;
+	height: 60px;
+	background-color: #36b9cc;
+	border-radius: 10px 10px 0px 0px;
+	color: black;
+	text-align: center;
+	font-size: 18px;
+	padding-top: 15px;
+}
+
+.pending {
+	flex: 1;
+	width: 25%;
+	background-color: #eeeeee;
+	box-sizing: border-box;
+}
+
+#pendingTitle {
+	font-family: 'Montserrat', sans-serif;
+	color: white;
+	text-align: center;
+	font-size: 18px;
+	padding-top: 15px;
+	font-weight: bold;
+	width: 100%;
+	height: 60px;
+	background-color: #5a5c69;
+	border-radius: 10px 10px 0px 0px;
+	text-align: center;
+	font-size: 18px;
+	padding-top: 15px;
+}
+
+.draggable.dragging {
+	opacity: 0.5;
+}
+
+.nav-link {
+	color: black;
+	font-size: 17px;
+}
+
+a:link  {
+	 color:  black;
+	 text-decoration:  none;
+}
+
+a:visited  {
+	 color:  black;
+	 text-decoration:  none;
+}
+
+a:hover  {
+	 color:  black;
+	 text-decoration:  underline;
+}
+</style>
+</head>
+<body>
+	<div id="wrapper">
+		<!-- content 시작 -->
+		<th:block th:replace="fragments/sidebar :: sidebar"></th:block>
+		<!-- content 끝 -->
+
+		<div id="content-wrapper" class="d-flex flex-column">
+			<!-- header 시작 -->
+			<nav th:fragment="navFragment"
+				class="navbar navbar-expand navbar-light bg-white topbar static-top shadow">
+
+				<!-- Sidebar Toggle (Topbar) -->
+				<button id="sidebarToggleTop"
+					class="btn btn-link d-md-none rounded-circle mr-3">
+					<i class="fa fa-bars"></i>
+				</button>
+
+
+				<!-- Topbar Navbar -->
+				<ul class="navbar-nav ml-auto">
+
+					<!-- Nav Item - Alerts -->
+					<li class="nav-item dropdown no-arrow mx-1"><a
+						class="nav-link dropdown-toggle" href="#" id="alertsDropdown"
+						role="button" data-toggle="dropdown" aria-haspopup="true"
+						aria-expanded="false"> <i class="fas fa-bell fa-fw"></i> <!-- Counter - Alerts -->
+							<span class="badge badge-danger badge-counter">3+</span>
+					</a> <!-- Dropdown - Alerts -->
+						<div
+							class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
+							aria-labelledby="alertsDropdown">
+							<h6 class="dropdown-header">Alerts Center</h6>
+							<a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="mr-3">
+									<div class="icon-circle bg-primary">
+										<i class="fas fa-file-alt text-white"></i>
+									</div>
+								</div>
+								<div>
+									<div class="small text-gray-500">December 12, 2019</div>
+									<span class="font-weight-bold">A new monthly report is
+										ready to download!</span>
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="mr-3">
+									<div class="icon-circle bg-success">
+										<i class="fas fa-donate text-white"></i>
+									</div>
+								</div>
+								<div>
+									<div class="small text-gray-500">December 7, 2019</div>
+									$290.29 has been deposited into your account!
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="mr-3">
+									<div class="icon-circle bg-warning">
+										<i class="fas fa-exclamation-triangle text-white"></i>
+									</div>
+								</div>
+								<div>
+									<div class="small text-gray-500">December 2, 2019</div>
+									Spending Alert: We've noticed unusually high spending for your
+									account.
+								</div>
+							</a> <a class="dropdown-item text-center small text-gray-500"
+								href="#">Show All Alerts</a>
+						</div></li>
+
+					<!-- Nav Item - Messages -->
+					<li class="nav-item dropdown no-arrow mx-1"><a
+						class="nav-link dropdown-toggle" href="#" id="messagesDropdown"
+						role="button" data-toggle="dropdown" aria-haspopup="true"
+						aria-expanded="false"> <i class="fas fa-envelope fa-fw"></i> <!-- Counter - Messages -->
+							<span class="badge badge-danger badge-counter">7</span>
+					</a> <!-- Dropdown - Messages -->
+						<div
+							class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
+							aria-labelledby="messagesDropdown">
+							<h6 class="dropdown-header">Message Center</h6>
+							<a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="dropdown-list-image mr-3">
+									<img class="rounded-circle"
+										th:src="@{/img/undraw_profile_1.svg}" alt="...">
+									<div class="status-indicator bg-success"></div>
+								</div>
+								<div class="font-weight-bold">
+									<div class="text-truncate">Hi there! I am wondering if
+										you can help me with a problem I've been having.</div>
+									<div class="small text-gray-500">Emily Fowler · 58m</div>
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="dropdown-list-image mr-3">
+									<img class="rounded-circle"
+										th:src="@{/img/undraw_profile_2.svg}" alt="...">
+									<div class="status-indicator"></div>
+								</div>
+								<div>
+									<div class="text-truncate">I have the photos that you
+										ordered last month, how would you like them sent to you?</div>
+									<div class="small text-gray-500">Jae Chun · 1d</div>
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="dropdown-list-image mr-3">
+									<img class="rounded-circle"
+										th:src="@{/img/undraw_profile_3.svg}" alt="...">
+									<div class="status-indicator bg-warning"></div>
+								</div>
+								<div>
+									<div class="text-truncate">Last month's report looks
+										great, I am very happy with the progress so far, keep up the
+										good work!</div>
+									<div class="small text-gray-500">Morgan Alvarez · 2d</div>
+								</div>
+							</a> <a class="dropdown-item d-flex align-items-center" href="#">
+								<div class="dropdown-list-image mr-3">
+									<img class="rounded-circle"
+										src="https://source.unsplash.com/Mv9hjnEUHR4/60x60" alt="...">
+									<div class="status-indicator bg-success"></div>
+								</div>
+								<div>
+									<div class="text-truncate">Am I a good boy? The reason I
+										ask is because someone told me that people say this to all
+										dogs, even if they aren't good...</div>
+									<div class="small text-gray-500">Chicken the Dog · 2w</div>
+								</div>
+							</a> <a class="dropdown-item text-center small text-gray-500"
+								href="#">Read More Messages</a>
+						</div></li>
+
+					<div class="topbar-divider d-none d-sm-block"></div>
+
+					<!-- Nav Item - User Information -->
+					<li class="nav-item dropdown no-arrow"><a
+						class="nav-link dropdown-toggle" href="#" id="userDropdown"
+						role="button" data-toggle="dropdown" aria-haspopup="true"
+						aria-expanded="false"> <span
+							class="mr-2 d-none d-lg-inline text-gray-600 small">Username</span>
+							<img class="img-profile rounded-circle"
+							th:src="@{/img/undraw_profile.svg}">
+					</a> <!-- Dropdown - User Information -->
+						<div
+							class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+							aria-labelledby="userDropdown">
+							<a class="dropdown-item" href="#"> <i
+								class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> 마이페이지
+							</a> <a class="dropdown-item" href="#"> <i
+								class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i> 화상채팅
+							</a>
+							<div class="dropdown-divider"></div>
+							<a class="dropdown-item" href="#" data-toggle="modal"
+								data-target="#logoutModal"> <i
+								class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+								로그아웃
+							</a>
+						</div></li>
+				</ul>
+			</nav>
+			<nav class="navbar navbar-expand-lg"
+				style="background-color: #f1f3f5; padding-left: 55px; border-bottom: solid 1px #b0bec5">
+				<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+					<ul class="navbar-nav">
+						<li class="nav-item"><a class="nav-link" href="">태스크요약</a></li>
+						<li class="nav-item"><a class="nav-link active"
+							aria-current="page" href="../task/kanban" style="font-weight: bold">칸반보드</a></li>
+						<li class="nav-item"><a class="nav-link" href="../task/gantt">간트차트</a></li>
+					</ul>
+
+				</div>
+			</nav>
+			<nav class="navbar navbar-expand-lg" style="padding-left: 55px;">
+				<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+					<ul class="navbar-nav">
+						<li class="nav-item"><a class="nav-link active"
+							aria-current="page" href="../task/kanban">전체</a></li>
+						<li class="nav-item"><a class="nav-link"
+							href="../task/myAllocateKanban">할당태스크</a></li>
+						<li class="nav-item"><a class="nav-link"
+							href="../task/myChargedKanban" style="font-weight: bold">담당태스크</a></li>
+					</ul>
+
+				</div>
+			</nav>
+
+			<div class="parent">
+				<div class="containerBox requested">
+					<div id="requestedTitle">REQUESTED</div>
+					<div class="card m-2 py-3 border-left-warning" draggable="true"
+						th:each="list : ${list}" th:if="${list.task_state == '0'}">
+						<div class="card-body">
+							<input type="hidden" th:value="${list.task_seq}">
+							<p>[[${list.task_name}]]</p>
+
+							<div class="profile" th:each="member : ${members}"
+								th:if="${list.task_seq} == ${member.task_seq}">
+								<input type="hidden" id="m_mail" th:value="${member.memb_mail}">
+								<input type="hidden" id="m_name" th:value="${member.memb_name}">
+								<div class="profileBox">
+									<img class="profilePic"
+										th:src="@{/savedImg/}+${member.memb_ogfile}"
+										onerror="this.src='../../img/profile.png'">
+								</div>
+							</div>
+						</div>
+					</div>
+
+				</div>
+				<div class="containerBox inprogress">
+					<div id="progressTitle">IN PROGRESS</div>
+					<div class="card m-2 py-3 border-left-success" draggable="true"
+						th:each="list : ${list}" th:if="${list.task_state == '1'}">
+						<div class="card-body">
+							<input type="hidden" th:value="${list.task_seq}">
+							<p>[[${list.task_name}]]</p>
+
+							<div class="profile" th:each="member : ${members}"
+								th:if="${list.task_seq} == ${member.task_seq}">
+								<input type="hidden" id="m_mail" th:value="${member.memb_mail}">
+								<input type="hidden" id="m_name" th:value="${member.memb_name}">
+								<div class="profileBox">
+									<img class="profilePic"
+										th:src="@{/savedImg/}+${member.memb_ogfile}"
+										onerror="this.src='../../img/profile.png'">
+								</div>
+							</div>
+						</div>
+
+					</div>
+				</div>
+				<div class="containerBox done">
+					<div id="doneTitle">DONE</div>
+					<div class="card m-2 py-3 border-left-info" draggable="true"
+						th:each="list : ${list}" th:if="${list.task_state == '2'}">
+						<div class="card-body">
+							<input type="hidden" th:value="${list.task_seq}">
+							<p>[[${list.task_name}]]</p>
+
+							<div class="profile" th:each="member : ${members}"
+								th:if="${list.task_seq} == ${member.task_seq}">
+								<input type="hidden" id="m_mail" th:value="${member.memb_mail}">
+								<input type="hidden" id="m_name" th:value="${member.memb_name}">
+								<div class="profileBox">
+									<img class="profilePic"
+										th:src="@{/savedImg/}+${member.memb_ogfile}"
+										onerror="this.src='../../img/profile.png'">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="containerBox pending">
+					<div id="pendingTitle">PENDING</div>
+					<div class="card m-2 py-3 border-left-dark" draggable="true"
+						th:each="list : ${list}" th:if="${list.task_state == '3'}">
+						<div class="card-body">
+							<input type="hidden" th:value="${list.task_seq}">
+							<p>[[${list.task_name}]]</p>
+
+							<div class="profile" th:each="member : ${members}"
+								th:if="${list.task_seq} == ${member.task_seq}">
+								<input type="hidden" id="m_mail" th:value="${member.memb_mail}">
+								<input type="hidden" id="m_name" th:value="${member.memb_name}">
+								<div class="profileBox">
+									<img class="profilePic"
+										th:src="@{/savedImg/}+${member.memb_ogfile}"
+										onerror="this.src='../../img/profile.png'">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- header 끝 -->
+			<!-- footer 시작 -->
+			<th:block th:replace="fragments/footer :: footerFragment"></th:block>
+			<!-- footer 끝 -->
+		</div>
+	</div>
+	<script>
+	//어떤 컨테이너에 떨어졌는지
+	let where = null;
+	
+	//각 카드 요소들
+	const draggables = document.querySelectorAll(".card");
+	console.log(draggables);
+	
+	//컨테이너들
+	const containers = document.querySelectorAll(".containerBox");
+	
+	const requested = document.querySelector(".requested");
+	const inprogress = document.querySelector(".inprogress");
+	const done = document.querySelector(".done");
+	const pending = document.querySelector(".pending");
+	
+	containers.forEach((containerBox) => {
+		new Sortable(containerBox, {
+			group : "shared",
+			animation : 150
+		})	
+	})
+	
+	//태스크에 이벤트 리스너 달아주기
+	draggables.forEach(draggable => {
+		//dragstart : 드래그를 시작할 때 발생하는 이벤트
+		draggable.addEventListener("dragstart", () => {
+			console.log('드래그 시작');
+			//드래그가 시작되면 해당 요소에 dragging이라는 클래스명을 추가시킨다.
+			draggable.classList.add("dragging");
+					
+		});
+		
+		//dragend : 드래그하다가 마우스를 놓는 순간 발생하는 이벤트
+		draggable.addEventListener("dragend", () => {
+			console.log('드래그 종료');
+			//드래그가 끝나면 dragging 클래스 삭제
+			draggable.classList.remove("dragging");
+		});
+	});
+	
+	//진행전 이벤트
+	requested.addEventListener("dragover", (e) => {
+		e.preventDefault();
+	});
+	
+	requested.addEventListener("drop", (e) => {
+		e.preventDefault();
+		
+		let dragging = $(".dragging").find('input').val();
+		console.log(dragging);
+		
+		if($(".dragging").hasClass("border-left-dark")){
+			$(".dragging").removeClass("border-left-dark");
+			$(".dragging").addClass("border-left-warning");
+		} else if($(".dragging").hasClass("border-left-success")){
+			$(".dragging").removeClass("border-left-success");
+			$(".dragging").addClass("border-left-warning");
+		} else if($(".dragging").hasClass("border-left-info")){
+			$(".dragging").removeClass("border-left-info");
+			$(".dragging").addClass("border-left-warning");
+		}
+		
+		console.log("requested drop & ajax 호출");
+		
+		where = 0;
+		
+		$.ajax({
+			url : "changeState",
+			type : "POST",
+			data : {
+				task_state : where,
+				task_seq : dragging
+			},
+			dataType : 'json',
+			success : function(){
+				alert('requested 변경 완료');
+			}
+		});
+	});
+	
+	//진행중
+	inprogress.addEventListener("dragover", (e) => {
+		e.preventDefault();
+	});
+	
+	inprogress.addEventListener("drop", (e) => {
+		e.preventDefault();
+		
+		let dragging = $(".dragging").find('input').val();
+		console.log(dragging);
+		
+		if($(".dragging").hasClass("border-left-dark")){
+			$(".dragging").removeClass("border-left-dark");
+			$(".dragging").addClass("border-left-success");
+		} else if($(".dragging").hasClass("border-left-warning")){
+			$(".dragging").removeClass("border-left-warning");
+			$(".dragging").addClass("border-left-success");
+		} else if($(".dragging").hasClass("border-left-info")){
+			$(".dragging").removeClass("border-left-info");
+			$(".dragging").addClass("border-left-success");
+		}
+		
+		console.log("inprogress drop & ajax 호출");
+		
+		where = 1;
+		
+		$.ajax({
+			url : "changeState",
+			type : "POST",
+			data : {
+				task_state : where,
+				task_seq : dragging
+			},
+			dataType : 'json',
+			success : function(){
+				alert('requested 변경 완료');
+			}
+		});
+	});
+	
+	//완료
+	done.addEventListener("dragover", (e) => {
+		e.preventDefault();
+	});
+	
+	done.addEventListener("drop", (e) => {
+		e.preventDefault();
+		
+		let dragging = $(".dragging").find('input').val();
+		console.log(dragging);
+		
+		if($(".dragging").hasClass("border-left-dark")){
+			$(".dragging").removeClass("border-left-dark");
+			$(".dragging").addClass("border-left-info");
+		} else if($(".dragging").hasClass("border-left-warning")){
+			$(".dragging").removeClass("border-left-warning");
+			$(".dragging").addClass("border-left-info");
+		} else if($(".dragging").hasClass("border-left-dark")){
+			$(".dragging").removeClass("border-left-dark");
+			$(".dragging").addClass("border-left-info");
+		}
+		
+		console.log("done drop & ajax 호출");
+		
+		where = 2;
+		
+		$.ajax({
+			url : "changeState",
+			type : "POST",
+			data : {
+				task_state : where,
+				task_seq : dragging
+			},
+			dataType : 'json',
+			success : function(){
+				alert('requested 변경 완료');
+			}
+		});
+	});
+	
+	//보류중
+	pending.addEventListener("dragover", (e) => {
+		e.preventDefault();
+	});
+	
+	pending.addEventListener("drop", (e) => {
+		e.preventDefault();
+		
+		let dragging = $(".dragging").find('input').val();
+		console.log(dragging);
+		
+		if($(".dragging").hasClass("border-left-warning")){
+			$(".dragging").removeClass("border-left-warning");
+			$(".dragging").addClass("border-left-dark");
+		} else if($(".dragging").hasClass("border-left-success")){
+			$(".dragging").removeClass("border-left-success");
+			$(".dragging").addClass("border-left-dark");
+		} else if($(".dragging").hasClass("border-left-info")){
+			$(".dragging").removeClass("border-left-info");
+			$(".dragging").addClass("border-left-dark");
+		}
+		
+		
+		console.log("pending drop & ajax 호출");
+		
+		where = 3;
+		
+		$.ajax({
+			url : "changeState",
+			type : "POST",
+			data : {
+				task_state : where,
+				task_seq : dragging
+			},
+			dataType : 'json',
+			success : function(){
+				alert('requested 변경 완료');
+			}
+		});
+	});
+	
+	$(".profile").hover(function(){
+		let memb_mail = $(this).find("#m_mail").val();
+		let memb_name = $(this).find("#m_name").val();
+
+		$(this).find(".profileBox").css('border', '3px solid #727272');
+		
+		$(this).append(
+			'<span class="membInfo">'+ memb_name + '  ' + memb_mail + '</span>'		
+		);
+	}, function(){
+		$(this).find(".profileBox").css('border', 'none');
+		$(".membInfo").remove();
+	});
+	/*
+	//컨테이너에 이벤트 리스너 달아주기
+	containers.forEach(containers => {
+		//드래그하면서 마우스가 대상 객체의 영역 위에 자리 잡고 있을 때 발생하는 이벤트
+		containers.addEventListener("dragover", e => {
+			//기본으로 정의된 이벤트(다른 요소 위에 얹을 수 없다...?)가 작동하지 못하게 막는다.
+			e.preventDefault();
+			
+			const afterElement = getDragAfterElement(containers, e.clientY)
+			console.log(afterElement);
+			
+			//드래그하는 요소가 해당 컨테이너 위에 있을 경우 자식으로 이어붙인다.
+			const draggable = document.querySelector(".dragging");
+			containers.appendChild(draggable);
+			
+		});
+	});
+	
+	//드래그하는 요소가 다른 요소 사이에 들어가도록 구현, 즉 정확한 위치를 잡아주기 위한 함수
+	function getDragAfterElement(containers, y){
+				
+		//draggableElements 배열에 현재 컨테이너에서 드래그하고 있는 모든 요소를 담는다.
+		//draggable:not(.dragging) -> 현재 드래그하고 있는 요소도 포함시키고자 함.
+		//... : array로 리턴해주기 위함.
+		
+		const draggableElements = [...containers.querySelectorAll('.card:not(.dragging)')]
+		
+		console.log(draggableElements);
+		
+		//reduce의 역할 : 배치시킬 정확한 요소 하나를 찾아내고자 함!
+		return draggableElements.reduce(
+			//closest : 현재 드래그하고 있는 요소와 가장 가까운 요소 하나, 어떤 요소가 마우스 커서 바로 뒤에 있나
+			(closest, child) => {
+				//DOM 엘리먼트의 위치를 구해 box 변수에 담는다
+				const box = child.getBoundingClientRect();
+				console.log(box);
+				
+				const offset = y - box.top - box.height / 2;
+				console.log(offset);
+				
+				if(offset < 0 && offset > closest.offset) {
+					return {offset : offset, element : child}
+				} else {
+					return closest
+				}
+			},
+			{offset : Number.NEGATIVE_INFINITY},
+		).element
+	}
+	*/
+</script>
+</body>
+</html>

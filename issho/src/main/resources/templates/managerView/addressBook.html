@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head th:replace="fragmentsManager/config :: configFragment">
+<meta charset="UTF-8">
+
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"
+	integrity="sha512-zYXldzJsDrNKV+odAwFYiDXV2Cy37cwizT+NkuiPGsa9X1dOz04eHvUWVuxaJ299GvcJT31ug2zO4itXBjFx4w=="
+	crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!-- gijgo datepicker library -->
+<script src="https://unpkg.com/gijgo@1.9.13/js/gijgo.min.js"
+	type="text/javascript"></script>
+<link href="https://unpkg.com/gijgo@1.9.13/css/gijgo.min.css"
+	rel="stylesheet" type="text/css" />
+	
+<title>멤버 주소록</title>
+
+
+<style>
+@import
+	url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap');
+
+.parent {
+	width: 90%;
+	height: 100%;
+	margin: 0 30px;
+	/*margin: 10px auto;
+	margin-top: 30px;*/
+	display: flex;
+}
+
+.profileBox {
+	width: 50px;
+	height: 50px;
+	border-radius: 70px;
+	overflow: hidden;
+	float: left;
+	position: relative;
+}
+
+.profilePic {
+	width: 20px;
+	height: 20px;
+	object-fit: cover;
+	position: absolute;
+	top: 0;
+	left: 0;
+	margin: 0;
+	padding: 0;
+}
+
+.membInfo {
+	background-color: #404040;
+	color: #fff;
+	top: 80%;
+	left: 20%;
+	margin-left: -60px;
+	text-align: center;
+	border-radius: 6px;
+	padding: 5px;
+	position: absolute; /* 절대 위치를 사용 */
+	z-index: 1;
+}
+
+.membInfo:after {
+	content: " ";
+	position: absolute;
+	bottom: 100%; /* At the top of the tooltip */
+	left: 50%;
+	margin-left: -5px;
+	border-width: 5px;
+	border-style: solid;
+	border-color: transparent transparent #404040 transparent;
+}
+
+.requested {
+	flex: 1;
+	width: 25%;
+	background-color: #eeeeee;
+	margin-right: 20px;
+	box-sizing: border-box;
+}
+
+#requestedTitle {
+	font-family: 'Montserrat', sans-serif;
+	color: black;
+	text-align: center;
+	font-size: 18px;
+	padding-top: 15px;
+	font-weight: bold;
+	width: 100%;
+	height: 60px;
+	background-color: #f6c23e;
+	border-radius: 10px 10px 0px 0px;
+	margin-botton: 10px;
+}
+
+.inprogress {
+	flex: 1;
+	width: 25%;
+	background-color: #eeeeee;
+	margin-right: 20px;
+	box-sizing: border-box;
+}
+
+#progressTitle {
+	font-family: 'Montserrat', sans-serif;
+	color: black;
+	text-align: center;
+	font-size: 18px;
+	padding-top: 15px;
+	font-weight: bold;
+	width: 100%;
+	height: 60px;
+	background-color: #1cc88a;
+	border-radius: 10px 10px 0px 0px;
+	color: black;
+	text-align: center;
+	font-size: 18px;
+	padding-top: 15px;
+}
+
+.done {
+	flex: 1;
+	width: 25%;
+	background-color: #eeeeee;
+	margin-right: 20px;
+	box-sizing: border-box;
+}
+
+#doneTitle {
+	font-family: 'Montserrat', sans-serif;
+	color: black;
+	text-align: center;
+	font-size: 18px;
+	padding-top: 15px;
+	font-weight: bold;
+	width: 100%;
+	height: 60px;
+	background-color: #36b9cc;
+	border-radius: 10px 10px 0px 0px;
+	color: black;
+	text-align: center;
+	font-size: 18px;
+	padding-top: 15px;
+}
+
+.pending {
+	flex: 1;
+	width: 25%;
+	background-color: #eeeeee;
+	box-sizing: border-box;
+}
+
+#pendingTitle {
+	font-family: 'Montserrat', sans-serif;
+	color: white;
+	text-align: center;
+	font-size: 18px;
+	padding-top: 15px;
+	font-weight: bold;
+	width: 100%;
+	height: 60px;
+	background-color: #5a5c69;
+	border-radius: 10px 10px 0px 0px;
+	text-align: center;
+	font-size: 18px;
+	padding-top: 15px;
+}
+
+.draggable.dragging {
+	opacity: 0.5;
+}
+
+.nav-link {
+	color: black;
+	font-size: 17px;
+}
+
+a:link  {
+	 color:  black;
+	 text-decoration:  none;
+}
+
+a:visited  {
+	 color:  black;
+	 text-decoration:  none;
+}
+
+a:hover  {
+	 color:  black;
+	 text-decoration:  underline;
+}
+</style>
+
+</head>
+<body>
+
+	<div id="wrapper">
+		<!-- content 시작 -->
+		<th:block th:replace="fragments/sidebar :: sidebar"></th:block>
+		<!-- content 끝 -->
+
+		<div id="content-wrapper" class="d-flex flex-column">
+			<!-- header 시작 -->
+			<th:block th:replace="fragments/header :: navFragment"></th:block>
+			
+			<!-- header 끝 -->
+			<div class="container-fluid">
+
+                    <!-- Page Heading -->
+                    <h1 class="h3 mb-2 text-gray-800">멤버 주소록</h1>
+
+                    <!-- DataTales Example -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">주소록 리스트</h6>
+                        </div>
+                        
+                                <div>
+                              
+                                <div id="dataTable_filter" class="dataTables_filter">
+                                <form class="form-inline" id="pagingForm" method="get" action="./manager/addressBook">
+                                <input type="hidden" name="page" id="page" >
+                                
+                               	<div id="listTop">
+                               	
+                               <!--  <p>검색된 인원 : <span th:text="${navi.totalRecordsCount}"></span>명</p> -->
+								
+								
+                                <label class="mr-sm-2" id="listTop1">
+                                <input type="text" class="form-control mb-2 mr-sm-2" id="listTop1" name="searchWord" th:value="${searchWord}">
+                                <button class="btn btn-primary mb-2" type="button" onclick="pagingFormSubmit(1)">
+				                     <i class="fas fa-search fa-sm"></i>
+				                   </button>
+                                </label>
+                                
+                             	</div>
+                             	
+                                </form>
+                                
+                                </div>
+                                </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <div id="dataTable_wrapper" class="dataTables_wrapper dt-bootstrap4">
+                                <div class="row"><div class="col-sm-12 col-md-6">
+                                <div class="dataTables_length" id="dataTable_length">
+                              
+                                </div>
+                                </div>
+                                </div>
+                                </div>
+                                </div>
+                                <div class="row">
+                                <div class="col-sm-12">
+                             
+						
+								
+                                <form action="">
+                                <table class="table table-bordered dataTable" id="dataTable" width="100%" cellspacing="0" role="grid" aria-describedby="dataTable_info" style="width: 100%;">
+                                    <thead>
+                                        <tr role="row">
+                                        <th class="sorting sorting_asc" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" aria-sort="ascending" style="width: 50px; text-align: center;" >프로필사진</th>
+                                        <th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" style="width: 50px;">이름</th>
+                                        <th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" style="width: 50px;">권한</th>
+                                        <th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" style="width: 50px;">이메일</th>
+                                        <th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" style="width: 90px;">담당업무</th>
+                                        <th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" style="width: 50px;">휴대전화</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr class="odd" th:each="l:${list}" >
+                                    <td style="text-align: center; line-height: 50px;"><img th:src="@{/savedImg/}+${l.memb_ogfile}"
+										onerror="this.src='../../img/profile.png'" class="rounded" height="50" width="50"></td>
+                                    <td  style="line-height: 50px;">
+                                    		<a th:text=${l.memb_name}></a></td>
+                                            <td th:text=${l.pjmb_right} style="line-height: 50px;"></td>
+                                            <td th:text=${l.memb_mail} id="email" style="line-height: 50px;"></td>
+                                            <td th:text=${l.memb_work} style="line-height: 50px;"></td>
+                                            <td th:text=${l.memb_phone} style="line-height: 50px;"></td>
+                                            
+                                       
+                                        </tr>
+                                        </tbody>
+                                      
+                                </table>
+                                </form>
+                                </div>
+                                </div>
+                                <div class="navigator">
+								<a class="btn btn-primary" th:href="|javascript:pagingFormSubmit(${navi.currentPage - 1})|">Previous</a> 
+
+								<span th:each="counter : ${#numbers.sequence(navi.startPageGroup, navi.endPageGroup)}"> 
+								<th:block th:if="${counter == navi.currentPage}"><b></th:block>
+								<a class="btn btn-light" th:text="${counter}" th:href="|javascript:pagingFormSubmit(${counter})|"></a>&nbsp;
+								<th:block th:if="${counter == navi.currentPage}"></b></th:block>
+								</span>
+	
+								<a class="btn btn-primary" th:href="|javascript:pagingFormSubmit(${navi.currentPage + 1})|">Next</a> 
+								<br><br>
+								
+								</div>
+                            
+                             </div>
+                             </div>
+                             
+                </div>
+			
+			<!-- footer 시작 -->
+			<th:block th:replace="fragmentsManager/footer :: footerFragment"></th:block>
+			<!-- footer 끝 -->
+		</div>
+	</div>
+
+<script>
+
+
+
+
+function pagingFormSubmit(currentPage) {
+	var form = document.getElementById('pagingForm');
+	var page = document.getElementById('page');
+	page.value = currentPage;
+	form.submit();
+}
+
+function showPop() {
+
+    console.log('showPop 실행');
+
+    window.open("multiRoom/chatHome", "메신저",
+          "width=500, height=700, top=10, left=10");
+ }
+ 
+
+</script>
+
+</body>
+</html>
+	

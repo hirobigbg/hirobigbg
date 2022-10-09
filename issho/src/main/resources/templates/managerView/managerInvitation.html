@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head th:replace="fragmentsManager/config :: configFragment">
+<meta charset="UTF-8">
+<title>구성원 페이지</title>
+
+<script th:src="@{/js/jquery-3.6.0.js}"></script>
+
+<!-- bootstrap 4 -->
+<link rel="stylesheet"
+   href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<link rel="stylesheet"
+   href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<script
+   src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script
+   src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<!-- CSS only -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+<!-- JavaScript Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8" crossorigin="anonymous"></script>
+
+</head>
+<body>
+
+	<div id="wrapper">
+		<!-- content 시작 -->
+		<th:block th:replace="fragmentsManager/sidebar :: sidebar"></th:block>
+		<!-- content 끝 -->
+
+		<div id="content-wrapper" class="d-flex flex-column">
+			<!-- header 시작 -->
+			<th:block th:replace="fragmentsManager/header :: navFragment"></th:block>
+
+			<!-- header 끝 -->
+			<div class="container-fluid">
+
+				<!-- Page Heading -->
+				<h1 class="h3 mb-2 text-gray-800">초대 관리</h1>
+
+				<!-- DataTales Example -->
+				<div class="card shadow mb-4">
+					<div class="card-header py-3">
+						<h6 class="m-0 font-weight-bold text-primary">초대 리스트</h6>
+					</div>
+						<div class="w3-clear nextprev">
+										<div class="w3-left w3-btn">
+											<form class="form-inline" id="pagingForm" method="get"
+												th:action="@{../manager/invitation}">
+												
+												<input type="hidden" name="page" id="page"> 
+												<div id="listTop" class="w3-left w3-btn">
+				
+												<label class="mr-sm-2" id="listTop1" >
+												<input class="form-control mb-2 mr-sm-2" type="text"  id="listTop1" name="searchWord" th:value="${searchWord}"> 
+			
+												<button class="btn btn-primary mb-2" type="button" onclick="pagingFormSubmit(1)">
+				                                    <i class="fas fa-search fa-sm"></i>
+				                                </button>
+				                                
+				                                <!-- 초대하기 버튼 -->
+												<div class="w3-right w3-btn" style="margin-left: 830px;">
+												<a  class="btn btn-primary btn-icon-split" id="newTask" data-bs-toggle="modal"
+								                  data-bs-target="exampleModal">
+			                                        <span   class="icon text-white-50">
+			                                            <i class="fas fa-flag"></i>
+			                                        </span>
+			                                        <span class="text">초대하기</span>
+			                                    </a>
+			                                    </div>
+												</label>
+				                                </div>
+				                                
+												
+								               
+
+												<!-- 태스크 추가 modal trigger -->
+								              <!--  <button class="btn btn-primary" id="newTask" data-bs-toggle="modal"
+								                  data-bs-target="exampleModal">
+								                  <i class="fas fa-flag"></i>초대하기
+								               </button> -->
+												
+									
+			                                    
+												<!-- <a  class="btn btn-primary btn-icon-split" onclick="invitationOpen()">
+			                                        <span   class="icon text-white-50">
+			                                            <i class="fas fa-flag"></i>
+			                                        </span>
+			                                        <span class="text">팝업초대하기</span>
+			                                    </a> -->
+			                                   
+			                                
+											</form>
+											
+										</div>
+										</div>
+					<div class="card-body">
+						<div class="table-responsive">
+							<div id="dataTable_wrapper"
+								class="dataTables_wrapper dt-bootstrap4">
+								<div class="row">
+									<div class="col-sm-12 col-md-6">
+										<div class="dataTables_length" id="dataTable_length"></div>
+									</div>
+									
+									</div>
+									</div>
+
+								
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-sm-12">
+										<form action="">
+											<table class="table table-bordered dataTable" id="dataTable"
+												width="100%" cellspacing="0" role="grid"
+												aria-describedby="dataTable_info" style="width: 100%;">
+												<thead>
+													<tr role="row">
+														<th class="sorting sorting_asc" tabindex="0"
+															aria-controls="dataTable" rowspan="1" colspan="1"
+															aria-sort="ascending" style="width: 100px;">이메일</th>
+														<th class="sorting" tabindex="0" aria-controls="dataTable"
+															rowspan="1" colspan="1" style="width: 80px;">이름</th>
+														<th class="sorting" tabindex="0" aria-controls="dataTable"
+															rowspan="1" colspan="1" style="width: 50px;">권한</th>
+														<th class="sorting" tabindex="0" aria-controls="dataTable"
+															rowspan="1" colspan="1" style="width: 50px;">초대자</th>
+														<th class="sorting" tabindex="0" aria-controls="dataTable"
+															rowspan="1" colspan="1" style="width: 50px;">초대상태</th>
+													
+													</tr>
+												</thead>
+												<tbody>
+													<tr class="odd" th:each="l:${list}">
+														<td class="sorting_1" th:text=${l.memb_mail}></td>
+														<td th:text=${l.memb_name}></td>
+														<td th:text=${l.pjmb_right}></td>
+														<td >scit@naver.com</td>
+														<td th:text=${l.membInv_accept}></td>
+														
+													</tr>
+												</tbody>
+
+											</table>
+										</form>
+									</div>
+								</div>
+
+                                <div class="navigator">
+								<a class="btn btn-primary" th:href="|javascript:pagingFormSubmit(${navi.currentPage - 1})|">Previous</a> 
+
+								<span th:each="counter : ${#numbers.sequence(navi.startPageGroup, navi.endPageGroup)}"> 
+								<th:block th:if="${counter == navi.currentPage}"><b></th:block>
+								<a class="btn btn-light" th:text="${counter}" th:href="|javascript:pagingFormSubmit(${counter})|"></a>&nbsp;
+								<th:block th:if="${counter == navi.currentPage}"></b></th:block>
+								</span>
+	
+								<a class="btn btn-primary" th:href="|javascript:pagingFormSubmit(${navi.currentPage + 1})|">Next</a> 
+								<br><br>
+								
+								</div>
+                             </div>
+                </div>
+			<!-- footer 시작 -->
+			<th:block th:replace="fragmentsManager/footer :: footerFragment"></th:block>
+			<!-- footer 끝 -->
+		</div>
+	</div>
+	
+	<!-- 태스크 추가 modal -->
+         <div class="modal fade" id="exampleModal" tabindex="-1"
+            aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-sm">
+               <div class="modal-content">
+                  <div class="modal-header">
+                     <h5 class="modal-title fw-bold mb-0" id="exampleModalLabel">멤버 초대</h5>
+                     
+                  </div>
+				 <div class="modal-body p-5 pt-0">
+				        <form th:action="@{../manager/mailSender2}" id="mailForm" method="post" >
+				   
+				          <div class="form-floating mb-3">
+				            <label for="floatingInput">Email address</label>
+				            <input type="email" name="membInv_recipient" class="form-control rounded-3" id="membInv_recipient" placeholder="name@example.com">
+				        
+				          </div>
+							<div id="idVal"></div>
+				
+				        </form>
+				      </div>
+                  <div class="modal-footer">
+                     <button type="button" id="closeNewTask" class="btn btn-secondary"
+                        data-bs-dismiss="modal">닫기</button>
+                     <button type="button" class="btn btn-primary" onclick="submitForm()">전송
+                        </button>
+                  </div>
+               </div>
+            </div>
+         </div>
+	
+	
+	
+	
+	<script>
+	function showPop() {
+
+        console.log('showPop 실행');
+
+        window.open("multiRoom/chatHome", "메신저",
+              "width=500, height=700, top=10, left=10");
+     }
+	
+		function pagingFormSubmit(currentPage) {
+			var form = document.getElementById('pagingForm');
+			var page = document.getElementById('page');
+			page.value = currentPage;
+			form.submit();
+		}
+
+		function invitationOpen() {
+			window.open('mailSender', 'newWin',
+					'left=400,top=200,width=500,height=500,menubar=no');
+			
+		}
+		
+		
+	      //새로운 태스크 모달창 제어
+	      $("#newTask").click(function(e) {
+	         e.preventDefault();
+	         $("#exampleModal").modal("show");
+	      });
+
+	      $("#closeNewTask").click(function(e) {
+	         e.preventDefault();
+	         $("#exampleModal").modal("hide");
+	      })
+	      
+	 function submitForm(){
+	let membInv_recipient = $("#membInv_recipient").val();
+	let prj_domain = $("#prj_domain").val();
+	
+	let form = $("#mailForm");
+	
+	console.log(form);
+	
+	$.ajax({
+		url : "mailIdCheck",
+		type : "POST",
+		data : {
+			membInv_recipient : membInv_recipient,
+			prj_domain : prj_domain
+		},
+		dataType : 'json',
+		success : function(result) {
+			if (result == 0) {
+				$('#mailForm').submit();
+					 setTimeout(function() {   
+				           window.close();
+				          }, 500); 
+					 Swal.fire('메일이 전송되었습니다 :)')
+				
+			} else {
+				Swal.fire('이미 초대한 이메일입니다 :)')
+			}
+		}
+	});
+} 
+	</script>
+	<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+	
+</body>
+</html>
+

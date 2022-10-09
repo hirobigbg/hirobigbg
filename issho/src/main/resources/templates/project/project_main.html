@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head th:replace="fragments/config :: configFragment">
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<script th:src="@{js/jquery-3.6.0.min.js}">
+function showPop() {
+
+    console.log('showPop 실행');
+
+    window.open("multiRoom/chatHome", "메신저",
+          "width=500, height=700, top=10, left=10");
+ }
+</script>
+
+</head>
+<body>
+
+	<div id="wrapper">
+		<!-- content 시작 -->
+		<th:block th:replace="fragments/sidebar :: sidebar"></th:block>
+		<!-- content 끝 -->
+
+		<div id="content-wrapper" class="d-flex flex-column">
+			<!-- header 시작 -->
+			<th:block th:replace="fragments/header :: navFragment"></th:block>
+
+			<div class="container">
+				<div class="row row-cols-2">
+					<div class="col">
+						<div class="card shadow mb-4">
+							<div class="card-header py-3">
+								<h6 class="m-0 font-weight-bold text-primary">최신 공지사항</h6>
+								<div class="card-body">
+								
+										<table class="table table-hover">
+											<tr class="border-bottom" th:each="list : ${MainNoticelist}">
+												<td><a style="text-decoration=none;color: #858796;" th:href="@{/}+${list.prj_domain}+'/notice/readNotice?notice_seq='+${list.notice_seq}" th:text="${list.notice_name}"></a></td>
+											</tr>
+										</table>
+										
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="col">
+						<div class="card shadow mb-4">
+							<div class="card-header py-3">
+								<h6 class="m-0 font-weight-bold text-primary">내가 작성한 일정</h6>
+								<div class="card-body">
+										
+										<table class="table table-hover">
+											<tr class="border-bottom" th:each="list2 : ${MainPlanlist}">
+												<td th:text="${list2.plan_name}"></td>
+											</tr>
+										</table>
+										
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="col">
+						<div class="card shadow mb-4">
+							<div class="card-header py-3">
+								<h6 class="m-0 font-weight-bold text-primary">내 할당 태스크 현황</h6>
+								<div class="card-body">
+								
+										<table class="table table-hover">
+											<tr class="border-bottom" th:each="list3 : ${MainMysenderlist}">
+												<td class="d-flex justify-content-between">
+													<div class="mt-2" th:text="${list3.task_name}"></div>
+													<div class="btn btn-warning" style="cursor: default;" th:if="${list3.task_state=='0'}">진행전</div>
+													<div class="btn btn-primary" style="cursor: default;" th:if="${list3.task_state=='1'}">진행중</div>
+													<div class="btn btn-success" style="cursor: default;" th:if="${list3.task_state=='2'}">완료</div>
+													<div class="btn btn-secondary" style="cursor: default;" th:if="${list3.task_state=='3'}">보류</div>
+												</td>
+											</tr>
+										</table>
+										
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="col">
+						<div class="card shadow mb-4">
+							<div class="card-header py-3">
+								<h6 class="m-0 font-weight-bold text-primary">내 담당 태스크 리스트</h6>
+								<div class="card-body">
+								
+										<table class="table table-hover">
+											<tr class="border-bottom" th:each="list4 : ${MainMyStafflist}">
+												<td class="d-flex justify-content-between">
+													<div class="mt-2" th:text="${list4.task_name}"></div>
+													<div class="btn btn-warning" style="cursor: default;" th:if="${list4.task_state=='0'}">진행전</div>
+													<div class="btn btn-primary" style="cursor: default;" th:if="${list4.task_state=='1'}">진행중</div>
+													<div class="btn btn-success" style="cursor: default;" th:if="${list4.task_state=='2'}">완료</div>
+													<div class="btn btn-secondary border-bottom" style="cursor: default;" th:if="${list4.task_state=='3'}">보류</div>
+												</td>
+											</tr>
+										</table>
+								
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- header 끝 -->
+			<!-- footer 시작 -->
+			<th:block th:replace="fragments/footer :: footerFragment"></th:block>
+			<!-- footer 끝 -->
+		</div>
+	</div>
+
+	<script>
+		function showPop() {
+
+			console.log('showPop 실행');
+
+			window.open("multiRoom/chatHome", "메신저",
+					"width=500, height=700, top=10, left=10");
+		}
+	</script>
+</body>
+</html>
